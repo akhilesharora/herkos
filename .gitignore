@@ -1,0 +1,16 @@
+# build artifacts
+/dist/
+*.test
+*.out
+/herkos
+.DS_Store
+
+# local code-graph index
+.herkos/
+
+# local tooling and scratch
+.build/
+.claude/
+
+# internal notes, kept local only
+notes/

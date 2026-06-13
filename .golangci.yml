@@ -1,0 +1,35 @@
+version: "2"
+run:
+  timeout: 5m
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - errorlint
+    - gosec
+    - depguard
+  settings:
+    gosec:
+      excludes:
+        - G304 # reading operator-supplied config/receipt paths is the tool's job, not traversal
+        - G703 # writing operator-supplied config/backup paths (same rationale as G304)
+        - G204 # `herkos serve` spawns the operator-named upstream MCP command by design
+        - G122 # `herkos index` walks an operator-supplied source tree; symlink TOCTOU is not in scope
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    depguard:
+      rules:
+        core:
+          files:
+            - "**/internal/core/**"
+          deny:
+            - pkg: "github.com/akhilesharora/herkos/internal/adapters"
+              desc: "core must not import adapters (hexagonal boundary)"
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
