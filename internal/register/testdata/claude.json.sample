@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 2,
+  "mcpServers": {
+    "weather": {
+      "command": "weather-mcp",
+      "args": ["--units", "metric"]
+    }
+  }
+}
