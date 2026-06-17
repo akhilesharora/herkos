@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The dual-use binding - Herkos</title>
+<meta name="description" content="The one idea behind Herkos: the minimal code context a model is served and the egress allowlist that bounds it are the same object, computed once. What it is, why it differs from IFC and signed-receipt work, and exactly where it holds and does not.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html" aria-current="page">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / The dual-use binding</div>
+    <h1>The dual-use binding</h1>
+    <p class="page-lede">The one idea behind Herkos: the minimal code context a model is served and the egress allowlist that bounds what it may send should be the <em>same</em> object, computed once. Herkos calls that object a <code>Binding</code>. This page states the idea, separates it from the work it resembles, and says plainly where it holds and where it does not.</p>
+
+    <h2 id="problem">The problem</h2>
+    <p>An AI coding agent reads private source and can also call tools that leave the machine. The usual response bolts on two separate mechanisms: one to trim the context sent to the model, another to police egress. Provenance, "which lines of my code actually went to the model", is then reconstructed after the fact from logs, if at all. The two mechanisms can disagree, and the reconstruction is exactly that.</p>
+
+    <h2 id="insight">One object, three roles</h2>
+    <p>A <code>Binding</code> is constructed once from a resolved <code>SpanSet</code> (a set of <code class="mono">(file, line-range)</code> spans produced by the local tree-sitter code graph). That single value is simultaneously:</p>
+    <ol>
+      <li><strong>the context</strong> the model is served (those spans, canonicalized);</li>
+      <li><strong>the deny-by-default read and egress allowlist</strong> (a payload is authorized only if every source span it derives from is covered by the set; the zero value authorizes nothing);</li>
+      <li><strong>the signed input manifest</strong> (the spans are the leaves of an ed25519 Merkle receipt, verifiable offline with only the public key).</li>
+    </ol>
+    <p>There is no API that serves one set and enforces another. "Context set == egress set" is a type invariant, not a convention, because both the serve path and the egress authorizer read exactly the same <code>Binding</code>.</p>
+    <pre><code>// internal/core: the only value both the serve path and the egress authorizer read.
+type Binding struct{ spans SpanSet }
+
+func NewBinding(ss SpanSet) Binding { return Binding{spans: ss} }
+
+// AuthorizePayload allows a payload iff EVERY source span it derives from is covered by
+// the bound set. No provenance, or any span outside the set, denies. Zero Binding denies all.
+func (b Binding) AuthorizePayload(req EgressRequest) Decision {
+	if len(req.SourceSpans) == 0 {
+		return Deny(ReasonDenyByDefault, "no provenance")
+	}
+	for _, s := range req.SourceSpans {
+		if !b.spans.Covers(s) {
+			return Deny(ReasonOutsideAllowlist, s.String())
+		}
+	}
+	return Allow()
+}</code></pre>
+
+    <h2 id="prior-art">Why this is not the prior art</h2>
+    <p>The pieces look familiar; the combination is not.</p>
+    <table>
+      <thead><tr><th>Work</th><th>What it binds</th><th>How Herkos differs</th></tr></thead>
+      <tbody>
+        <tr><td><strong>IFC for agents</strong> (e.g. Microsoft Fides, <code>arXiv:2505.23643</code>)</td><td>confidentiality/integrity <em>labels</em> through messages, tool calls, results</td><td>labels bind to messages; the dual-use binding binds to <code class="mono">(file, line-range)</code> spans, auto-derived from the code graph, no manual labels</td></tr>
+        <tr><td><strong>Signed agent receipts</strong> (Agent Receipts, Vouched KYA-OS, Signet, mcptrust)</td><td>the <em>output</em> envelope of a tool call (method, params, result)</td><td>same primitives (Ed25519, Merkle, JCS), but none signs the <em>input</em> context the model saw</td></tr>
+        <tr><td><strong>SLSA / in-toto</strong></td><td>"materials" at repo or artifact granularity</td><td>the input predicate at <em>span</em> granularity</td></tr>
+        <tr><td><strong>Outbound allowlists</strong> (HTTP/domain egress)</td><td>agent identity, destination domains, IPs</td><td>binds to the code-span context the model was given</td></tr>
+      </tbody>
+    </table>
+    <p>The field is output- and traffic-centric: it can assert <em>what flowed</em> and <em>what was called</em>, never <em>what was allowed in</em> bound to <em>what is allowed out</em>. The span set is the only artifact organized around the input set, and binding it to egress upgrades it from a log to a boundary.</p>
+
+    <div class="note warn">
+      <span class="label">The hard constraint, stated plainly</span>
+      <p>The binding is only real where the broker mediates <strong>100% of the agent's code access and egress</strong>. A coding agent that reads files natively (<code>cat</code>, <code>grep</code>, its own Read tool) bypasses an MCP-broker-level binding, leaving the manifest incomplete and the allowlist unenforced. To be complete, the binding must sit on the <em>sole</em> filesystem-read and egress path: a syscall/FUSE-level interception or a policy-mandated sandbox, not an in-path MCP broker. Where the agent can bypass it, the binding is an honest log, not a boundary, and should be described as exactly that.</p>
+    </div>
+
+    <h2 id="scope">What it does and does not protect</h2>
+    <ul>
+      <li><strong>Does:</strong> bound direct egress of repo content outside the served set; produce an exact, deterministic record of what entered context (versus probabilistic NL taint-tracking, which is ~0.9-F1 at best).</li>
+      <li><strong>Does not:</strong> stop denial-feedback / causal side channels (<code>arXiv:2604.04035</code>); stop exfiltration via logs, stdout, or subagents outside the mediated path (the majority of real-world leak channels); stop regurgitation from the model's training memory. A span boundary mediates the read and egress path and nothing beyond it.</li>
+    </ul>
+
+    <h2 id="where">Where it is meaningful</h2>
+    <p>Forced-mediation deployments where org policy routes all model context through the broker: regulated or air-gapped shops (defense, finance, medical-device firmware). There the chokepoint is real, the allowlist is enforceable, and line-range granularity is contractually meaningful for license-contamination ("prove the authorized context excluded GPL span X") and data-residency ("these lines never crossed the boundary"). Outside such a topology, the value collapses to provenance-as-log, and the market currently asks for that at file/commit granularity, not span.</p>
+
+    <h2 id="standard">As a standard</h2>
+    <p>The cleanest form of the idea is not a proprietary receipt but an in-toto / SLSA <code>inputs</code>/<code>materials</code> predicate at <code class="mono">(file, line-range)</code> granularity, captured at the point of generation and verified downstream. That is the interoperable contribution, and a more useful one than another signed-receipt format.</p>
+
+    <div class="note">
+      <span class="label">Status</span>
+      <p>Reference implementation in Go: <code>internal/core</code> (<code>Binding</code>, <code>SpanSet</code>), the SpanGate pipeline, and ed25519 Merkle receipts (<code>pkg/receipt</code>), with the egress half wired into <code>herkos serve</code> as an opt-in content gate. A reference implementation of the idea, not a commercial product.</p>
+    </div>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="concepts.html">&larr; Concepts</a>
+        <a href="case-studies.html">Case studies &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

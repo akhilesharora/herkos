@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Herkos - your coding agent, on a leash you own">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0.84" cy="0.05" r="0.6">
+      <stop offset="0" stop-color="#6366f1" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.1" cy="0.1" r="0.55">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0d1320"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- depth arcs motif, right side -->
+  <g fill="none" stroke="url(#grad)" stroke-linecap="round" opacity="0.5" transform="translate(940,330)">
+    <path d="M-150 0 A 150 150 0 0 1 150 0" stroke-width="3" opacity="0.35"/>
+    <path d="M-110 0 A 110 110 0 0 1 110 0" stroke-width="3" opacity="0.55"/>
+    <path d="M-70 0 A 70 70 0 0 1 70 0" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="-150" x2="0" y2="60" stroke-width="2" stroke-dasharray="2 9" opacity="0.6"/>
+    <circle cx="0" cy="60" r="9" fill="url(#grad)" stroke="none"/>
+  </g>
+
+  <!-- wordmark mark -->
+  <g transform="translate(96,150)">
+    <rect x="0" y="0" width="64" height="64" rx="15" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+    <g fill="none" stroke="url(#grad)" stroke-linecap="round" transform="translate(0,0)">
+      <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+      <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+      <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/>
+    </g>
+    <circle cx="32" cy="46" r="4.4" fill="url(#grad)"/>
+  </g>
+
+  <text x="180" y="200" class="sans" font-size="52" font-weight="700" letter-spacing="-1" fill="url(#grad)">Herkos</text>
+
+  <!-- headline -->
+  <text x="96" y="330" class="sans" font-size="74" font-weight="700" letter-spacing="-2.5" fill="#e7ecf3">Your coding agent,</text>
+  <text x="96" y="416" class="sans" font-size="74" font-weight="700" letter-spacing="-2.5" fill="#e7ecf3">on a leash you own.</text>
+
+  <!-- sub -->
+  <text x="98" y="478" class="sans" font-size="27" fill="#aab4c2">Local-first context + egress broker for AI coding agents.</text>
+
+  <!-- footer line -->
+  <text x="98" y="556" class="mono" font-size="22" fill="#7b8694">deny-by-default  ·  signed receipts  ·  Apache-2.0  ·  Go</text>
+</svg>

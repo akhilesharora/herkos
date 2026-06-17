@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case studies - Herkos</title>
+<meta name="description" content="Real, documented 2025 MCP incidents, each tested honestly against what Herkos would actually have done. Three in depth (GitHub toxic flow, postmark-mcp, MCPoison) plus two more in brief. The pattern: the broker rarely prevents the real attacks; the signed receipt is the durable value.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html" aria-current="page">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Case studies</div>
+    <h1>Case studies</h1>
+    <p class="page-lede">Worked examples built on real, documented 2025 MCP incidents, not invented scenarios. For each one: what would Herkos actually have done? The answer is consistent, and it is the reason for the product's direction.</p>
+
+    <div class="note warn">
+      <span class="label">The pattern</span>
+      <p><strong>Herkos is weak at prevention and strong at provable audit.</strong> The headline MCP attacks defeat tool-name allowlisting: they ride tools the user already approved, or leak server-side where an in-path broker cannot see. What Herkos uniquely gives you is a signed, offline-verifiable record of what the agent did and what code touched the model. The anchor is the receipt, not the broker.</p>
+    </div>
+
+    <h2 id="indepth">Three in depth</h2>
+    <p>Each of these has its own page: the verified incident, the step-by-step mechanism, where Herkos helps and where it honestly does not, and a real run of this repo's binary on that scenario.</p>
+    <div class="grid" style="margin: 20px 0;">
+      <a class="card" href="case-github-mcp.html" style="text-decoration:none; color:inherit; display:block;">
+        <h3>GitHub MCP toxic flow &rarr;</h3>
+        <p>A public-repo issue injects an agent into leaking private repos through an approved <code>create_pull_request</code>. A tool-name allowlist passes every step. <strong>Herkos's win: the signed audit log</strong> - the forensic record of what ran. <span style="color:var(--fg-muted)">Invariant Labs, May 2025. No CVE (architectural).</span></p>
+      </a>
+      <a class="card" href="case-postmark.html" style="text-decoration:none; color:inherit; display:block;">
+        <h3>postmark-mcp backdoor &rarr;</h3>
+        <p>A malicious npm email server BCC'd every message to an attacker, server-side, where a client broker can't see it. <strong>The boundary case</strong> - but <code>herkos scan</code> flags the unpinned, unbrokered setup that let it land. <span style="color:var(--fg-muted)">Koi Security, Sep 2025.</span></p>
+      </a>
+      <a class="card" href="case-mcpoison.html" style="text-decoration:none; color:inherit; display:block;">
+        <h3>MCPoison rug-pull &rarr;</h3>
+        <p>A Cursor MCP config approved once was trusted forever, so a post-approval swap ran silently. Herkos does <em>not</em> catch the command swap; <code>scan --baseline</code> catches the description-poisoning cousin. <span style="color:var(--fg-muted)">Check Point, CVE-2025-54136, Jul 2025.</span></p>
+      </a>
+    </div>
+
+    <h2 id="more">Two more, in brief</h2>
+    <div class="grid grid-2" style="margin: 20px 0;">
+      <div class="card" id="trifecta">
+        <h3>Supabase SQL leak / the lethal trifecta</h3>
+        <p>A Cursor agent with a <code>service_role</code> key reads injected SQL in a support ticket and leaks <code>integration_tokens</code> - all three trifecta legs (private data, untrusted content, an exfil path) in one session. <strong>Broker: does NOT prevent</strong> (the query tool is allowed); the signed log is the post-incident record. <span style="color:var(--fg-muted)">General Analysis / Simon Willison, Jun 16 2025.</span></p>
+      </div>
+      <div class="card" id="compliance">
+        <h3>Compliance audit - provable provenance</h3>
+        <p>"Prove which source files were sent to the model this session." Without a receipt there is no answer; Herkos's signed Merkle receipt verifies offline with only the public key. <strong>Real, but not unique</strong>: open-source Pipelock and patented AGA ship offline-verifiable agent receipts too, so this is a feature, not a moat. <span style="color:var(--fg-muted)">SOC 2 / EU AI Act Art. 12.</span></p>
+      </div>
+    </div>
+
+    <h2 id="summary">What the set proves</h2>
+    <table>
+      <thead><tr><th>Incident</th><th>Broker prevents?</th><th>Receipt / audit value</th></tr></thead>
+      <tbody>
+        <tr><td>GitHub toxic flow</td><td>No (allowed tool)</td><td>Strong</td></tr>
+        <tr><td>postmark-mcp</td><td>No (server-side)</td><td>Weak</td></tr>
+        <tr><td>MCPoison rug-pull</td><td>Partial (baseline diff)</td><td>Supporting</td></tr>
+        <tr><td>Supabase / trifecta</td><td>No (injection)</td><td>Strong</td></tr>
+        <tr><td>Compliance audit</td><td>n/a</td><td><strong>Strong - the wedge</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Four of five say the same thing: the broker rarely prevents the real attacks; the honest value is harm-reduction plus a forensic record, not prevention. The signed receipt is the strongest of those legs, but it is a feature the field already ships (open-source Pipelock, patented AGA), not a moat - which is why Herkos is an honest reference implementation, not a product.</p>
+
+    <div class="note">
+      <span class="label">The honest bottom line</span>
+      <p>The problem is real, but every pillar here is commodity (native host controls, Pipelock, Snyk/Invariant), and even the smart future version of the one novel idea is already in the literature (NeuroTaint, OCELOT, CaMeL, MCP-DPT). Incident details are from the cited 2025 sources; the receipt output is a real run of this repo's binary. The value of this page is the honest map, not a product pitch.</p>
+    </div>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="dual-use-binding.html">&larr; The dual-use binding</a>
+        <a href="security.html">Security model &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

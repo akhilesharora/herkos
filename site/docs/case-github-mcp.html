@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub MCP toxic agent flow - Herkos case study</title>
+<meta name="description" content="GitHub MCP 'toxic agent flow': a public-repo issue injects an agent into leaking private repos through an approved tool. A tool-name allowlist can't stop it; the signed audit log is the forensic record.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html" aria-current="page">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / <a href="case-studies.html">Case studies</a> / GitHub toxic flow</div>
+    <h1>Exfil through an approved tool: the GitHub MCP toxic flow</h1>
+    <p class="page-lede">A public-repo issue tells an agent to go read the user's private repos and publish what it finds. The agent obeys, opening a public pull request full of private data. Every tool it used was one the user approved. A tool-name allowlist passes all of it; the only thing Herkos adds is a signed record of exactly what happened.</p>
+
+    <div class="note">
+      <span class="label">At a glance</span>
+      <p><strong>Disclosed:</strong> Invariant Labs, May 26 2025. <strong>Target:</strong> the official <code>github/github-mcp-server</code> (over 14,000 stars at the time of disclosure). <strong>CVE:</strong> none - Invariant framed it as an architectural problem, not a server bug to patch. <strong>Vendor response:</strong> none that we could find; a community member later filed a reproduction issue (<a href="https://github.com/github/github-mcp-server/issues/844" rel="noopener">#844</a>, Aug 2025) which went stale with no official reply. <strong>Sources:</strong> <a href="https://invariantlabs.ai/blog/mcp-github-vulnerability" rel="noopener">Invariant Labs</a>, <a href="https://invariantlabs.ai/blog/toxic-flow-analysis" rel="noopener">Toxic Flow Analysis</a>.</p>
+    </div>
+
+    <h2 id="what-happened">What happened</h2>
+    <p>The attack is a "toxic agent flow": one agent session that combines ingesting untrusted content, access to private data, and an external write channel. Any one is fine; the combination in a single trust context is the hole.</p>
+
+    <div class="diagram" style="margin: 24px 0;">
+      <svg viewBox="0 0 940 244" role="img" aria-label="A public issue injects the agent, which reads private repos and writes them into a public pull request the attacker reads.">
+        <defs>
+          <marker id="ghb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f5b14c"/></marker>
+          <marker id="ghg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7b8694"/></marker>
+        </defs>
+        <rect x="20" y="40" width="190" height="64" rx="12" fill="#1a2336" stroke="#f5b14c" stroke-width="1.3"/>
+        <text x="115" y="66" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#f5b14c">public issue</text>
+        <text x="115" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">injected instructions</text>
+        <rect x="300" y="40" width="210" height="64" rx="12" fill="#161e30" stroke="#2dd4bf" stroke-width="1.5"/>
+        <text x="405" y="66" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#2dd4bf">agent</text>
+        <text x="405" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" fill="#7b8694">token spans public + private</text>
+        <rect x="600" y="40" width="180" height="64" rx="12" fill="#1a2336" stroke="#f5b14c" stroke-width="1.3"/>
+        <text x="690" y="66" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#f5b14c">public PR</text>
+        <text x="690" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">private data, exposed</text>
+        <rect x="820" y="40" width="100" height="64" rx="12" fill="#1a2336" stroke="#394763"/>
+        <text x="870" y="76" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">attacker</text>
+        <rect x="300" y="150" width="210" height="58" rx="12" fill="#1a2336" stroke="#394763"/>
+        <text x="405" y="176" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">private repos</text>
+        <text x="405" y="195" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" fill="#7b8694">salary, plans, repo names</text>
+        <path d="M210 72 L296 72" stroke="#f5b14c" stroke-width="2" fill="none" marker-end="url(#ghb)"/>
+        <text x="216" y="32" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">1. injected</text>
+        <path d="M405 104 L405 146" stroke="#7b8694" stroke-width="2" fill="none" marker-end="url(#ghg)"/>
+        <text x="416" y="132" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">2. reads private</text>
+        <path d="M510 72 L596 72" stroke="#f5b14c" stroke-width="2" fill="none" marker-end="url(#ghb)"/>
+        <text x="516" y="32" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">3. writes out</text>
+        <path d="M780 72 L816 72" stroke="#7b8694" stroke-width="2" fill="none" marker-end="url(#ghg)"/>
+        <text x="20" y="234" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">the toxic trifecta: untrusted input (1) + private data (2) + an exfil channel (3) in one session</text>
+      </svg>
+    </div>
+    <ol>
+      <li><strong>Plant the payload.</strong> The attacker opens an issue in a public repo (the PoC used <code>ukend0464/pacman</code>) whose body contains injected instructions telling the agent to gather and publish the user's other repository data.</li>
+      <li><strong>Victim triggers the agent benignly.</strong> The user runs an agent wired to the GitHub MCP server with a token spanning <em>both</em> their public and private repos, and gives an innocuous prompt like "check the open issues in this repo."</li>
+      <li><strong>Untrusted content enters context.</strong> The issue-listing tool returns the malicious issue body verbatim. There is no trust boundary between attacker-authored text and the user's instructions.</li>
+      <li><strong>Injection fires.</strong> The agent treats the injected text as instructions and pivots from "triage issues" to "collect data across the user's repositories."</li>
+      <li><strong>Cross-repo read.</strong> With the same broad token, the agent reads private repositories the attacker cannot see. The PoC pulled a private repo ("Jupiter Star"), a plan to relocate to South America, and salary information into context.</li>
+      <li><strong>Exfil via a public write.</strong> The agent auto-creates a pull request in the attacker-visible public repo containing the harvested private data.</li>
+      <li><strong>Attacker reads the leak.</strong> The PR is public, so the attacker just reads it - never touching the private repo directly.</li>
+    </ol>
+    <p>Invariant was explicit that this "is not a flaw in the GitHub MCP server code itself, but rather a fundamental architectural issue that must be addressed at the agent system level." It is client-agnostic (the PoC used one desktop agent, but any agent on the server is exposed). In fairness, some practitioners argued it is classic indirect prompt injection plus an over-broad token rather than a novel GitHub bug - which is a reason to fix it at the agent level, not to dismiss it.</p>
+
+    <h2 id="herkos">Where Herkos helps, and where it does not</h2>
+    <ul>
+      <li><strong>Broker: does NOT prevent.</strong> <code>create_pull_request</code> is a tool the user legitimately allowed. A tool-name allowlist passes it. Prevention here needs per-task data scoping and least-privilege tokens (Invariant's own advice: one repo per session), not a name check.</li>
+      <li><strong>Content gate: partial at best.</strong> With a served set pinned, Herkos blocks tool-call arguments carrying verbatim repo lines from outside it - but the leaked data here is repo names and facts, not necessarily verbatim served lines, and any encoding defeats a verbatim match. Do not lean on it for this.</li>
+      <li><strong>Receipt: strong.</strong> This is the real value. The audit log records that <code>create_pull_request</code> ran, with the request hashed, signed, and chained. After a leak you can prove exactly what left and when. Forensics, not a force field.</li>
+    </ul>
+
+    <h2 id="receipt">Here is the receipt</h2>
+    <p>A real run of this repo's binary: the broker records the <code>create_pull_request</code> call into a signed, hash-chained log, then seals it. The log verifies offline with only the public key, flags truncation, and fails under the wrong key.</p>
+    <div class="terminal" style="margin: 16px 0;">
+      <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="title">herkos verify - the audit log</span></div>
+<pre aria-label="herkos verify audit log output"><span class="c-dim"># the broker recorded: open(seq 0) -> call(seq 1, create_pull_request) -> close(seq 2)</span>
+<span class="c-dim">$ </span>herkos verify <span class="c-flag">--file</span> audit/&lt;session&gt;.jsonl <span class="c-flag">--pubkey</span> 685e6104...ef87
+<span class="c-ok">VERIFIED</span>  session=233b02ca28be2b28f0c1a45b84fc20fb calls=1 cleanly closed  tip=4638a19e...
+
+<span class="c-dim"># drop the signed close line to fake a shorter history:</span>
+<span class="c-dim">$ </span>herkos verify <span class="c-flag">--file</span> audit/truncated.jsonl <span class="c-flag">--pubkey</span> 685e6104...ef87
+<span class="c-warn">INCOMPLETE</span>  session=233b02ca... calls=1  not cleanly closed (possible truncation)   <span class="c-dim">(exit 1)</span>
+
+<span class="c-dim">$ </span>herkos verify <span class="c-flag">--file</span> audit/&lt;session&gt;.jsonl <span class="c-flag">--pubkey</span> 0000...0000
+<span class="c-warn">FAILED</span>: receiptlog: line 0: signature invalid   <span class="c-dim">(exit 1)</span></pre>
+    </div>
+
+    <div class="note warn">
+      <span class="label">The honest boundary</span>
+      <p>Prevention is aspirational and belongs to agent-system design: scope data access per task, separate untrusted-input ingestion from privileged actions, use least-privilege tokens. Herkos does none of that. What it gives you is the one thing missing after an incident like this - a tamper-evident, offline-verifiable record of which tool ran and what context was present. Audit is real; the force field is not.</p>
+    </div>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="case-studies.html">&larr; All case studies</a>
+        <a href="case-postmark.html">postmark-mcp &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

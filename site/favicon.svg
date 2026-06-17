@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Herkos">
+  <defs>
+    <linearGradient id="fg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+  <!-- depth arcs: a sounding line descending into the herkos -->
+  <g fill="none" stroke="url(#fg)" stroke-linecap="round">
+    <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+    <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+    <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/>
+  </g>
+  <!-- plumb weight at depth -->
+  <circle cx="32" cy="46" r="4.4" fill="url(#fg)"/>
+</svg>

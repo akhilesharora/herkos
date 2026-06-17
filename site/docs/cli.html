@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLI reference - Herkos</title>
+<meta name="description" content="Full CLI reference for Herkos: keygen, register, unregister, serve, index, select, scan, status, receipt, verify, init. Every command and flag.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html" aria-current="page">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / CLI reference</div>
+    <h1>CLI reference</h1>
+    <p class="page-lede">Every <code>herkos</code> command and its flags. The binary is a single Go executable; run any command with no arguments to see its usage.</p>
+
+    <h2 id="overview">Commands at a glance</h2>
+    <table>
+      <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#keygen"><code>keygen</code></a></td><td>Create the local ed25519 signing key.</td></tr>
+        <tr><td><a href="#register"><code>register</code></a></td><td>Wire Herkos into an MCP config.</td></tr>
+        <tr><td><a href="#unregister"><code>unregister</code></a></td><td>Remove Herkos from an MCP config.</td></tr>
+        <tr><td><a href="#serve"><code>serve</code></a></td><td>Run the in-path broker in front of an upstream server.</td></tr>
+        <tr><td><a href="#index"><code>index</code></a></td><td>Build the code-graph index for a repo.</td></tr>
+        <tr><td><a href="#select"><code>select</code></a></td><td>Print the minimal span set for a query (the served set).</td></tr>
+        <tr><td><a href="#scan"><code>scan</code></a></td><td>Audit an MCP config and emit a security receipt.</td></tr>
+        <tr><td><a href="#status"><code>status</code></a></td><td>Show the current state.</td></tr>
+        <tr><td><a href="#receipt"><code>receipt</code></a></td><td>Verify a saved Merkle receipt file.</td></tr>
+        <tr><td><a href="#verify"><code>verify</code></a></td><td>Verify a receipt or an audit-log chain against a public key.</td></tr>
+        <tr><td><a href="#init"><code>init</code></a></td><td>Initialize Herkos in the current setup.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="keygen">keygen</h2>
+    <p>Create the local ed25519 signing key. It is written <code>0600</code> and stays on your machine. Every receipt is signed with it.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos keygen</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+
+    <h2 id="register">register</h2>
+    <p>Wire Herkos into an MCP config. Two modes. <b>Wrap an existing server</b> with <code>--server &lt;name&gt;</code>: Herkos rewrites that entry in place to launch through the broker, preserving its <code>env</code>, and leaves <i>no</i> direct entry the agent could still call - so there is no bypass. <b>Add a new brokered server</b> by passing the upstream command after <code>--</code>.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos register <span class="c-flag">--config</span> &lt;mcp.json&gt; <span class="c-flag">--server</span> &lt;name&gt; <span class="c-flag">--allow-tool</span> &lt;tool&gt;</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--config &lt;mcp.json&gt;</code></td><td>Path to the MCP config to rewrite.</td></tr>
+        <tr><td><code>--server &lt;name&gt;</code></td><td>Wrap the server already named in the config, in place. <code>unregister</code> reverses it losslessly. Preferred: no un-brokered entry is left behind.</td></tr>
+        <tr><td><code>--allow-tool &lt;tool&gt;</code></td><td>Allow a tool by name. Repeat for each tool. Anything not listed is denied.</td></tr>
+        <tr><td><code>-- &lt;upstream cmd&gt;</code></td><td>Add-new mode: the upstream server command. Everything after <code>--</code> is passed through.</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn">
+      <span class="label">Prefer <code>--server</code></span>
+      <p>Add-new mode (passing a command after <code>--</code>) leaves the original server entry untouched, so the agent can still reach it un-brokered. Use <code>--server &lt;name&gt;</code> to wrap a server that is already in the config; it rewrites that one entry and leaves no bypass.</p>
+    </div>
+
+    <h2 id="unregister">unregister</h2>
+    <p>Remove Herkos from an MCP config and restore the original launch line.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos unregister <span class="c-flag">--config</span> &lt;mcp.json&gt;</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--config &lt;mcp.json&gt;</code></td><td>Path to the MCP config to restore.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="serve">serve</h2>
+    <p>Run the in-path broker. Herkos sits in front of the upstream server and passes only the <code>tools/call</code> whose tool name you allowed. A call to any other tool is blocked in-path and answered with a JSON-RPC error; the session keeps running.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos serve <span class="c-flag">--allow-tool</span> read_file <span class="c-flag">--allow-tool</span> list_dir -- npx -y @some/mcp-server</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--allow-tool &lt;tool&gt;</code></td><td>Allow a tool by name. Repeat for each tool. Deny-by-default for everything else.</td></tr>
+        <tr><td><code>--served-span &lt;FILE:START-END&gt;</code></td><td>Pin a served span (end exclusive, the form <code>herkos select</code> prints). Repeat for each. Arms the content gate; needs <code>--index</code>.</td></tr>
+        <tr><td><code>--index &lt;path&gt;</code></td><td>Code-graph index built by <code>herkos index</code>. With <code>--served-span</code>, its files are fingerprinted so out-of-set verbatim lines can be recognized.</td></tr>
+        <tr><td><code>--root &lt;dir&gt;</code></td><td>Repo root the index's file paths are relative to. Default <code>.</code></td></tr>
+        <tr><td><code>--key &lt;path&gt;</code></td><td>Signing key path. Created on first use if missing.</td></tr>
+        <tr><td><code>--receipts &lt;dir&gt;</code></td><td>Opt-in. Write a signed, hash-chained audit log of every brokered tool call to a fresh file in this directory. Sealed on shutdown; the tip hash is printed so you can anchor it. Verify with <a href="#verify"><code>herkos verify</code></a>.</td></tr>
+        <tr><td><code>--isolate</code></td><td>Linux only. Run the upstream in a fresh network namespace with no route out (only loopback), so it cannot open its own socket to any host. For servers that only need stdio to Herkos. Unprivileged.</td></tr>
+        <tr><td><code>-- &lt;upstream cmd&gt;</code></td><td>The upstream MCP server command to broker.</td></tr>
+      </tbody>
+    </table>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos serve <span class="c-flag">--allow-tool</span> read_file <span class="c-flag">--receipts</span> ~/.herkos/audit <span class="c-flag">--isolate</span> -- npx -y @some/mcp-server</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <div class="note">
+      <span class="label">--isolate, end to end</span>
+      <p>The same egress probe run as the upstream reaches <code>HTTP 200</code> without <code>--isolate</code> and returns <code>000</code> (no route) with it. stdio - the MCP transport between the agent, Herkos, and the server - is unaffected, since it is not network. A server that needs its own outbound network should not be isolated. See the <a href="security.html#bypass">security model</a>.</p>
+    </div>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos serve <span class="c-flag">--allow-tool</span> post_message <span class="c-flag">--index</span> .herkos/index <span class="c-flag">--served-span</span> auth.go:1-40 -- npx -y @some/mcp-server</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <div class="note warn">
+      <span class="label">Scope</span>
+      <p>By default the broker gates the tool name of outbound <code>tools/call</code> only: it does not inspect arguments or gate other methods. With a served set pinned (<code>--served-span</code> plus <code>--index</code>) it also blocks arguments carrying verbatim repo lines from outside that set, a userspace tripwire that encoding or paraphrase defeats. See the <a href="security.html">security model</a>.</p>
+    </div>
+
+    <h2 id="index">index</h2>
+    <p>Build the code-graph index for a repo. This is the tree-sitter parse that <code>select</code> and the content gate read; it stays on disk and is rebuilt when you re-run it.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos index <span class="c-flag">--out</span> .herkos/index &lt;dir&gt;</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--out &lt;path&gt;</code></td><td>Index output path. Default <code>&lt;dir&gt;/.herkos/index</code>.</td></tr>
+        <tr><td><code>&lt;dir&gt;</code></td><td>The repo directory to index.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="select">select</h2>
+    <p>Print the minimal span set for a query against a prebuilt index - the served set. These are the same spans that, on the egress path, become the deny-by-default allowlist. Pure-Go; it reads the index, it does not parse source.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos select <span class="c-flag">--index</span> .herkos/index <span class="c-flag">--anchor</span> Authenticate <span class="c-flag">--budget</span> 200</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--index &lt;path&gt;</code></td><td>Path to an index built by <code>herkos index</code>. Required.</td></tr>
+        <tr><td><code>--anchor &lt;symbol&gt;</code></td><td>Symbol to anchor the query on. Repeat for each. At least one required.</td></tr>
+        <tr><td><code>--budget &lt;N&gt;</code></td><td>Line budget for the span set. Default <code>200</code>.</td></tr>
+      </tbody>
+    </table>
+    <p>Each printed span has the form <code>FILE:START-END</code> (end exclusive) - the exact form <code>serve --served-span</code> expects.</p>
+
+    <h2 id="scan">scan</h2>
+    <p>Audit an MCP config and emit a security receipt: over-scoped tools, poisoned tool descriptions, and servers with unrestricted egress. Pass a baseline to diff against a known-good state.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos scan <span class="c-flag">--config</span> &lt;mcp.json&gt; <span class="c-flag">--baseline</span> &lt;b.json&gt;</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--config &lt;mcp.json&gt;</code></td><td>Path to the MCP config to scan.</td></tr>
+        <tr><td><code>--baseline &lt;b.json&gt;</code></td><td>Optional. A baseline receipt to diff against, to catch drift.</td></tr>
+      </tbody>
+    </table>
+    <div class="terminal" style="margin: 16px 0;">
+      <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="title">example output</span></div>
+<pre aria-label="herkos scan output">  <span class="c-warn">[unbrokered]</span> codegraph: launched directly, not through the herkos broker
+  <span class="c-warn">[remote]</span> bank: remote http server at an external URL; the stdio broker cannot mediate it
+<span class="c-dim">herkos scan:</span> <span class="c-ok">0</span> over-scoped, <span class="c-ok">0</span> poisoned, <span class="c-ok">0</span> unrestricted-egress, <span class="c-warn">1</span> unbrokered, <span class="c-ok">0</span> unpinned-install, <span class="c-warn">1</span> remote - your code never left this machine</pre>
+    </div>
+
+    <h2 id="status">status</h2>
+    <p>Show the current state. Add <code>--json</code> for machine-readable output.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos status <span class="c-flag">--json</span></pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>Emit status as JSON instead of human-readable text.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="receipt">receipt</h2>
+    <p>Verify a saved receipt file. Re-checks the signature and the Merkle root with your local key.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos receipt <span class="c-flag">--file</span> &lt;r.json&gt;</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--file &lt;r.json&gt;</code></td><td>Path to the receipt file to verify.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="verify">verify</h2>
+    <p>Verify a receipt against an explicit public key, fully offline. It auto-detects the file: a single Merkle receipt verifies its signature and root; an audit-log chain (from <a href="#serve"><code>serve --receipts</code></a>) verifies the whole hash-chain and reports whether it was cleanly sealed. A truncated log - one missing its signed close record - is reported as <code>INCOMPLETE</code> with a non-zero exit, so silent tail-dropping is detectable.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos verify <span class="c-flag">--file</span> &lt;receipt-or-chain.jsonl&gt; <span class="c-flag">--pubkey</span> &lt;hex&gt;</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+    <table>
+      <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--file &lt;path&gt;</code></td><td>The receipt file or audit-log chain to verify.</td></tr>
+        <tr><td><code>--pubkey &lt;hex&gt;</code></td><td>Hex ed25519 public key (printed by <code>herkos keygen</code> and on <code>serve</code> startup). Required.</td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <span class="label">receipt vs verify</span>
+      <p><code>receipt</code> re-checks a single Merkle receipt with your local key. <code>verify</code> takes an explicit <code>--pubkey</code>, so a third party can confirm a receipt or audit log without trusting your machine, and it understands the hash-chained <code>serve --receipts</code> log.</p>
+    </div>
+
+    <h2 id="init">init</h2>
+    <p>Initialize Herkos in the current setup.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos init</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
+    </div>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="security.html">&larr; Security model</a>
+        <a href="index.html">Overview &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security model - Herkos</title>
+<meta name="description" content="Herkos's security model, threat model, and the bypass we publish ourselves. What v1's in-path broker enforces, and exactly what it does not.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="security.html" aria-current="page">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Security model</div>
+    <h1>Security model</h1>
+    <p class="page-lede">A security tool that hides its gaps is worse than no tool, because you trust it more than you should. This page states what Herkos enforces today, what it does not, and the bypass we publish ourselves.</p>
+
+    <div class="note warn">
+      <span class="label">The one rule we hold ourselves to</span>
+      <p>We will not tell you "your code never leaves" as an unqualified absolute. Herkos in <code>userspace</code> mode gives you deny-by-default tool control and a signed audit trail. It is not a kernel-enforced seal. Where that distinction matters, it is spelled out below.</p>
+    </div>
+
+    <div class="note">
+      <span class="label">Pin what your agent sees</span>
+      <p><strong>Pin what your agent sees. That is all that can leave.</strong> The spans Herkos serves are the same set it allows out: with a served set pinned, verbatim repo lines from outside that set are blocked on the way to a tool call. This is a userspace tripwire, not a sandbox - encoded, paraphrased, or reflowed exfil can still slip past, and a kernel-enforced boundary (Landlock, seccomp, eBPF) is next on the roadmap.</p>
+    </div>
+
+    <h2 id="threat-model">Threat model</h2>
+    <p>Herkos is built for a setup where you run an AI coding agent against MCP servers you do not fully trust. The adversaries it has in mind:</p>
+    <ul>
+      <li><strong>Untrusted or compromised MCP servers.</strong> A server you wired up may be over-scoped, may have a poisoned tool description that nudges the agent into leaking, or may try to exfiltrate through tools you never meant to expose.</li>
+      <li><strong>Over-broad context.</strong> The agent hauls more of your source to the model than the query needs, so you pay for tokens and widen the blast radius of any leak.</li>
+      <li><strong>No record.</strong> Without a receipt, you cannot say afterward which lines of your code touched the model.</li>
+    </ul>
+    <p>What Herkos is <strong>not</strong> designed to stop: a fully malicious agent binary running with your privileges, kernel-level compromise of your machine, or a model endpoint you deliberately send data to. The leash constrains the agent's egress surface; it does not sandbox your whole OS.</p>
+
+    <h2 id="enforces">What v1 enforces</h2>
+    <ul>
+      <li><strong>Deny-by-default tool control.</strong> The in-path broker (<code>herkos serve</code>) passes only the <code>tools/call</code> whose tool name you allowed with <code>--allow-tool</code>. Anything else is blocked in-path and answered with a JSON-RPC error, and the session keeps running.</li>
+      <li><strong>A signed audit trail.</strong> Every answer ships a signed Merkle receipt of which spans touched the model, verifiable locally with your own ed25519 key.</li>
+      <li><strong>Config auditing.</strong> <code>herkos scan</code> flags over-scoped tools, poisoned tool descriptions, and servers with unrestricted egress, with a receipt you can diff against a baseline.</li>
+      <li><strong>Dual-use egress gate (opt-in).</strong> Pin the spans the model may see with <code>--served-span</code> and Herkos blocks <code>tools/call</code> arguments that carry verbatim repo lines from outside that set. It is a userspace tripwire on verbatim content, not a sandbox; the published bypass below says exactly what it does not catch.</li>
+    </ul>
+
+    <h2 id="bypass">The published bypass</h2>
+    <p>Here is exactly how to get data past v1's in-path broker. We publish it because you should know the boundary before you lean on it.</p>
+
+    <div class="limits" style="margin: 22px 0;">
+      <ul class="limit-list">
+        <li>
+          <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+          <span><b>Hide data in an allowed tool's arguments.</b> The broker gates the tool <i>name</i> only. It does not inspect parameters. An allowed tool can carry whatever you stuff into its args, and the broker will pass it.</span>
+        </li>
+        <li>
+          <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+          <span><b>Use a method that is not <code>tools/call</code>.</b> The in-path broker only gates <code>tools/call</code> in v1. Other JSON-RPC methods, including <code>resources/read</code>, are not gated.</span>
+        </li>
+        <li>
+          <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+          <span><b>Encode out-of-set bytes before they leave.</b> With a served set pinned, the content gate blocks tool-call arguments carrying <i>verbatim</i> repo lines from outside that set. Base64, paraphrase, reflowed whitespace, or splitting a line across calls all defeat a verbatim match, and an unarmed broker (no served set) does not inspect arguments at all. The transformation-resistant, kernel-enforced boundary is the roadmap item, not this tripwire.</span>
+        </li>
+        <li>
+          <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+          <span><b>Open your own socket and go around the broker.</b> The userspace broker sees what flows over MCP, not what a server dials out on its own. For a server that only needs stdio to Herkos, <code>serve --isolate</code> closes this: it launches the server in a fresh Linux network namespace with no interface but loopback, so it has no route to any host - unprivileged, and proven in the test suite (without <code>--isolate</code> the same probe reaches <code>HTTP 200</code>; with it, <code>000</code>, no route). A server that legitimately needs its own egress runs unisolated and can still open a socket the broker cannot see; constraining that to a per-destination allowlist needs elevated privilege (eBPF), the remaining roadmap item.</span>
+        </li>
+        <li>
+          <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+          <span><b>Truncate the audit log locally.</b> The <code>serve --receipts</code> log is a signed hash-chain, so editing, reordering, or dropping a middle record breaks <code>herkos verify</code>. But a local attacker with write access can chop the most recent entries, and the shorter prefix still verifies cryptographically. Herkos makes this <i>detectable</i>: a truncated log is missing its signed close record, so <code>verify</code> reports "not cleanly closed", and <code>serve</code> prints the tip hash on shutdown so you can anchor it out of band. It does not <i>prevent</i> local truncation; that needs an external transparency log.</span>
+        </li>
+      </ul>
+
+      <div class="callout">
+        <b>State it plainly:</b> the userspace broker gives you deny-by-default tool control plus a signed audit trail, not a kernel-enforced seal on arbitrary egress. <code>serve --isolate</code> adds a real kernel boundary for stdio-only servers; per-destination egress control for servers that need their own network is still coming.
+      </div>
+    </div>
+
+    <h2 id="roadmap">What closes the gap</h2>
+    <p>The gaps above are not permanent; they are the next work. Two things close most of them:</p>
+    <table>
+      <thead><tr><th>Work</th><th>What it adds</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SpanGate payload path</strong></td><td>Shipped as a userspace tripwire: with a served set pinned, verbatim repo lines outside it are blocked on the egress path (<code>--served-span</code>). What remains is provenance that survives transformation (encoding, paraphrase, reflow) so egress is enforced rather than approximated by a verbatim match.</td></tr>
+        <tr><td><strong>Hardened mode</strong></td><td>Moves enforcement into the OS. First layer shipped: <code>serve --isolate</code> runs a server in a no-egress network namespace, unprivileged. Still to come: per-destination host allowlisting via eBPF, plus Landlock and seccomp - the kernel-enforced seal that userspace cannot be.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <span class="label">How to read the scan line</span>
+      <p>When <code>herkos scan</code> prints "your code never left this machine", that is a true statement about <em>that run</em>: the scan read local config and made no network call. It is not a guarantee about every future agent session. Treat it as a receipt for one run, not a promise about all of them.</p>
+    </div>
+
+    <h2 id="report">Reporting an issue</h2>
+    <p>Herkos is local-first and open source under Apache-2.0, written in Go. If you find a way past the broker that is not already listed above, that is exactly the kind of finding worth filing. Open an issue on <a href="https://github.com/akhilesharora/herkos/issues" rel="noopener">GitHub</a>. The bar we hold ourselves to is to publish gaps before someone else has to.</p>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="concepts.html">&larr; Concepts</a>
+        <a href="cli.html">CLI reference &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

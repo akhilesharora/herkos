@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concepts - Herkos</title>
+<meta name="description" content="SpanGate, signed receipts, and the two enforcement modes: userspace (advisory, shipped) and hardened (kernel-enforced, roadmap).">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html" aria-current="page">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Concepts</div>
+    <h1>Concepts</h1>
+    <p class="page-lede">Three ideas carry the whole tool: SpanGate, signed receipts, and the two enforcement modes. Read these and the rest of the docs follow.</p>
+
+    <h2 id="spangate">SpanGate</h2>
+    <p>SpanGate is the one mechanism. For each query, Herkos's local code graph emits a minimal set of <code>(file, line-range)</code> spans. That same set does two jobs at once:</p>
+    <ul>
+      <li>It is the <strong>context</strong> handed to the model. The model gets the spans it needs to answer, not the whole tree, so you spend fewer tokens.</li>
+      <li>It is the <strong>egress allowlist</strong>. Anything outside the served span set is not allowed out, deny-by-default.</li>
+    </ul>
+    <p>The reason one set can do both is the claim at the center of Herkos: the minimal context an agent needs is exactly the only thing it should be allowed to send. If you trim context and police egress with two separate tools, they drift apart, and the gap between them is where leaks live. One set, no gap.</p>
+
+    <div class="diagram" style="margin: 24px 0;">
+      <svg viewBox="0 0 920 220" role="img" aria-label="One minimal span set feeds both the model context and the egress allowlist.">
+        <defs>
+          <linearGradient id="cg" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/>
+          </linearGradient>
+          <marker id="carr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6366f1"/></marker>
+          <marker id="carrt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2dd4bf"/></marker>
+        </defs>
+        <rect x="40" y="78" width="220" height="64" rx="12" fill="#161e30" stroke="url(#cg)" stroke-width="1.5"/>
+        <text x="150" y="106" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">minimal span set</text>
+        <text x="150" y="126" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#2dd4bf">(file, line-range)</text>
+
+        <rect x="640" y="20" width="240" height="64" rx="12" fill="#1a2336" stroke="#394763"/>
+        <text x="760" y="48" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2dd4bf">model context</text>
+        <text x="760" y="68" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">fewer tokens</text>
+
+        <rect x="640" y="136" width="240" height="64" rx="12" fill="#1a2336" stroke="#394763"/>
+        <text x="760" y="164" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#6366f1">egress allowlist</text>
+        <text x="760" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">deny-by-default</text>
+
+        <path d="M260 102 C 440 70, 470 56, 636 52" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#carrt)"/>
+        <path d="M260 118 C 440 150, 470 164, 636 168" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#carr)"/>
+      </svg>
+    </div>
+
+    <h2 id="receipts">Receipts</h2>
+    <p>Every answer ships a signed Merkle receipt of which spans touched the model. The receipt is built from the served span set, signed with your local ed25519 key, and verifiable on your machine. No server has to vouch for it.</p>
+    <p>A receipt lets you answer, after the fact and with proof, the question "what did the model actually see for this query." It is a record you hold, not a log you have to trust a vendor to keep.</p>
+    <div class="terminal" style="margin: 18px 0;">
+      <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="title">a verified receipt</span></div>
+<pre aria-label="verified receipt output"><span class="c-dim">SpanGate demo (files [auth.go db.go])</span>
+  served <span class="c-num">40</span> / <span class="c-num">500</span> lines  -&gt;  tokens saved <span class="c-ok">92%</span>
+  bytes blocked from egress: <span class="c-num">256</span>  (enforcement=<span class="c-warn">userspace</span>)
+  receipt: <span class="c-ok">VERIFIED</span>  root=<span class="c-hash">02659078080f474c9fac20c7a83aa070f95cda014e0b0ea0994d7dde477d3008</span></pre>
+    </div>
+    <p>The Merkle root is deterministic over the canonicalized span set, so two runs that served the same spans produce the same root. Re-verify a saved receipt with <code>herkos receipt --file &lt;r.json&gt;</code>.</p>
+
+    <h2 id="modes">Enforcement modes</h2>
+    <p>How strictly egress is enforced comes in layers. Be clear about which you are running.</p>
+
+    <table>
+      <thead><tr><th>Mode</th><th>Status</th><th>What it enforces</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>userspace</code></td>
+          <td>Shipped</td>
+          <td>Advisory and auditing. Deny-by-default tool-name control on outbound <code>tools/call</code>, plus a signed audit trail. Not a kernel-enforced seal.</td>
+        </tr>
+        <tr>
+          <td><code>serve --isolate</code></td>
+          <td>Shipped (Linux)</td>
+          <td>Kernel network namespace with no route out: the brokered server gets only loopback and cannot open its own socket to any host. Unprivileged. For servers that only need stdio to Herkos; not a per-destination allowlist.</td>
+        </tr>
+        <tr>
+          <td><code>hardened</code></td>
+          <td>Roadmap</td>
+          <td>OS-enforced, per-destination byte-level egress boundary using Linux Landlock and seccomp, then eBPF host allowlisting. The airtight mode for servers that do need their own network; not shipped yet.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note warn">
+      <span class="label">Read this carefully</span>
+      <p><code>userspace</code> mode is not airtight. It gives you deny-by-default tool control and a signed audit trail, not a kernel-enforced seal on outbound bytes. <code>serve --isolate</code> adds a kernel boundary for a server that needs no network of its own. The per-destination seal for servers that do (and the byte-level provenance boundary that ties egress to exactly the served span set) is <code>hardened</code>-mode work, on the roadmap.</p>
+    </div>
+
+    <h2 id="graph">The local code graph</h2>
+    <p>The span set comes from a code graph that Herkos builds locally with a tree-sitter parser (Go, TypeScript, and Python today). The graph never leaves your machine, and neither does the signing key. Local-first is not a slogan here; it is what makes the receipt trustworthy, because the thing producing it is under your control.</p>
+
+    <h2 id="next">Next</h2>
+    <p>The <a href="security.html">security model</a> spells out the threat model and publishes the bypass. The <a href="cli.html">CLI reference</a> documents every command.</p>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="quickstart.html">&larr; Quickstart</a>
+        <a href="security.html">Security model &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

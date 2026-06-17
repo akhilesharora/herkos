@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herkos - your coding agent, on a leash you own</title>
+<meta name="description" content="Local-first context and egress broker for AI coding agents. One mechanism, SpanGate, gives the model fewer tokens and gives you deny-by-default control over what leaves your machine. Every answer ships a signed receipt.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Herkos - your coding agent, on a leash you own">
+<meta property="og:description" content="Local-first context and egress broker for AI coding agents. One mechanism: fewer tokens and deny-by-default egress, with signed receipts.">
+<meta property="og:image" content="og.svg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="docs/index.html">Docs</a>
+      <a href="docs/security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="docs/quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-depth" aria-hidden="true">
+      <svg viewBox="0 0 720 720" fill="none">
+        <defs><linearGradient id="dg" x1="0" y1="0" x2="720" y2="720" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <g stroke="url(#dg)" fill="none" stroke-linecap="round" transform="translate(360,200)">
+          <path d="M-300 0 A 300 300 0 0 1 300 0" stroke-width="2" opacity="0.18"/>
+          <path d="M-250 0 A 250 250 0 0 1 250 0" stroke-width="2" opacity="0.26"/>
+          <path d="M-200 0 A 200 200 0 0 1 200 0" stroke-width="2" opacity="0.34"/>
+          <path d="M-150 0 A 150 150 0 0 1 150 0" stroke-width="2" opacity="0.46"/>
+          <path d="M-100 0 A 100 100 0 0 1 100 0" stroke-width="2" opacity="0.6"/>
+          <path d="M-50 0 A 50 50 0 0 1 50 0" stroke-width="2.5" opacity="0.85"/>
+          <line x1="0" y1="0" x2="0" y2="330" stroke-width="2" stroke-dasharray="2 12" opacity="0.5"/>
+          <circle cx="0" cy="330" r="9" fill="url(#dg)" stroke="none"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="wrap hero-inner">
+      <span class="tag reveal"><span class="dot"></span> Local-first  ·  open source  ·  Apache-2.0</span>
+      <h1 class="reveal" data-d="1"><span class="lead">Your coding agent,</span> on a <span class="grad-text">leash you own</span>.</h1>
+      <p class="sub reveal" data-d="2">An in-path broker for Claude Code, Cursor, and Cline. Every tool call your agent makes has to clear a deny-by-default allowlist first - a tool you never approved gets a hard error in-path, and your session keeps running. We do not claim to stop prompt injection; the research says nobody can. So we do the part that is real, and we publish our own bypass list - the gaps included.</p>
+      <div class="cta-row reveal" data-d="3">
+        <a class="btn btn-primary" href="docs/quickstart.html">
+          Run the broker
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="docs/security.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+          What Herkos does not do
+        </a>
+      </div>
+      <p class="cta-note reveal" data-d="3">$ go install github.com/akhilesharora/herkos/cmd/herkos@latest</p>
+      <p class="cta-note reveal" data-d="3" style="opacity:0.62;">The CLI binary and Go module are still named <code>herkos</code> (pre-rebrand); that is intentional.</p>
+    </div>
+  </section>
+
+  <!-- ============ SEE IT RUN ============ -->
+  <section class="section section-tight" id="demo">
+    <div class="wrap">
+      <span class="eyebrow reveal">See it run</span>
+      <h2 class="reveal" data-d="1" style="max-width: 20ch;">Scan a server, broker its calls, prove the log.</h2>
+      <p class="lede reveal" data-d="2" style="margin-top: 16px;">A real terminal and the real binary: <code class="mono">scan</code> flags an unpinned, unbrokered MCP server; a brokered call lands in a signed, hash-chained log that verifies offline; tamper with it and <code class="mono">verify</code> catches it.</p>
+      <div class="reveal" data-d="2" style="margin-top: 24px; border:1px solid var(--line-2); border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow); background:#161e30;">
+        <img src="demo.gif" width="1200" height="660" loading="lazy" alt="herkos scan flags an unpinned, unbrokered server; herkos verify reports VERIFIED for a signed audit log and INCOMPLETE for a tampered one" style="display:block; width:100%; height:auto;">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CASE STUDIES (proof) ============ -->
+  <section class="section section-tight" id="cases">
+    <div class="wrap">
+      <span class="eyebrow reveal">Mapped to real 2025 incidents</span>
+      <h2 class="reveal" data-d="1" style="max-width: 22ch;">Three real 2025 MCP incidents, each scored honestly.</h2>
+      <p class="lede reveal" data-d="2">For every one: what happened, and what Herkos actually catches versus where it honestly does not. No hand-waving.</p>
+      <div class="grid grid-3 reveal" data-d="2" style="margin-top: 24px;">
+        <a class="card" href="docs/case-github-mcp.html" style="text-decoration:none;color:inherit;display:block;">
+          <h3>GitHub toxic flow</h3>
+          <p>Injection rides an approved tool to leak private repos. The broker can't stop it; the signed audit log is the forensic record. <span style="color:var(--fg-muted)">Invariant Labs.</span></p>
+        </a>
+        <a class="card" href="docs/case-postmark.html" style="text-decoration:none;color:inherit;display:block;">
+          <h3>postmark-mcp backdoor</h3>
+          <p>A malicious server BCC'd every email, server-side. The boundary case; but scan flags the unpinned, unbrokered setup. <span style="color:var(--fg-muted)">Koi Security.</span></p>
+        </a>
+        <a class="card" href="docs/case-mcpoison.html" style="text-decoration:none;color:inherit;display:block;">
+          <h3>MCPoison rug-pull</h3>
+          <p>Approve-once, trust-forever swap. Herkos does <em>not</em> catch the command swap; <code>scan --baseline</code> catches the description-poisoning cousin. <span style="color:var(--fg-muted)">CVE-2025-54136.</span></p>
+        </a>
+      </div>
+      <p class="reveal" data-d="2" style="margin-top:18px;"><a href="docs/case-studies.html">All case studies &rarr;</a></p>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM / MANIFESTO ============ -->
+  <section class="section section-tight" id="problem">
+    <div class="wrap">
+      <span class="eyebrow reveal">The problem</span>
+      <h2 class="reveal" data-d="1" style="max-width: 18ch;">Agents write the code now. They also burn your tokens and quietly ship your source to a cloud you do not control.</h2>
+      <p class="lede reveal" data-d="2" style="margin-top: 18px;">Every query an agent makes hauls a pile of context to a model endpoint. You pay for the tokens, and you have no record of which lines of your code went over the wire. The usual fixes bolt on two separate tools: one to trim context, another to police egress. Herkos uses one.</p>
+    </div>
+  </section>
+
+  <!-- ============ WITHOUT / WITH ============ -->
+  <section class="section section-tight" id="compare">
+    <div class="wrap">
+      <span class="eyebrow reveal">The scenario</span>
+      <h2 class="reveal" data-d="1" style="max-width: 20ch;">You pasted in a server you didn't read.</h2>
+      <div class="grid grid-2" style="margin-top: 28px;">
+        <div class="card reveal">
+          <h3>Without Herkos</h3>
+          <p>From the moment it is in your config, the server can call any tool it exposes - <code>delete_file</code>, <code>send_email</code>, tools a silent update adds tomorrow. The agent runs hundreds of calls with no human in the loop and no gate on which tools are even on the table. You find out what it called when something is already gone.</p>
+        </div>
+        <div class="card reveal" data-d="1">
+          <h3>With Herkos</h3>
+          <p>You name the tools the server may call. Anything else gets a hard JSON-RPC error in-path before it reaches the server, and your session keeps going. A backdoored update that adds a <code>send_email</code> tool you never approved cannot call it - the allowlist is deny-by-default.</p>
+        </div>
+      </div>
+      <p class="muted reveal" data-d="2" style="margin-top: 18px;">What Herkos does <em>not</em> do: if you approved <code>send_email</code> and an injected instruction makes the agent BCC an attacker through it, Herkos forwards it - the abuse rides a tool you allowed. That is the postmark-mcp attack, and a name allowlist cannot catch it. We tell you that here because the other tools will not.</p>
+    </div>
+  </section>
+
+  <!-- ============ THE ONE MECHANISM ============ -->
+  <section class="section" id="spangate">
+    <div class="wrap">
+      <span class="eyebrow reveal">The one mechanism</span>
+      <h2 class="reveal" data-d="1">SpanGate: the context <em>is</em> the allowlist.</h2>
+      <p class="lede reveal" data-d="2">For each query, Herkos's local code graph emits a minimal set of <code class="mono">(file, line-range)</code> spans. That same set is both the model's context and the basis for the egress allowlist: the principle is that the minimal context an agent needs is exactly the only thing it should be allowed to send. Herkos enforces that in userspace - tool-name control plus a content tripwire - and signs a receipt of what actually touched the model. It is honest about the limits below: <code class="mono">serve --isolate</code> adds a kernel network boundary for a server that only needs stdio, but a full per-destination egress seal is still ahead.</p>
+
+      <div class="diagram reveal" data-d="2" style="margin-top: 34px;">
+        <svg viewBox="0 0 920 280" role="img" aria-label="SpanGate diagram: a query goes to the local code graph, which emits a minimal span set; that one set becomes both the model context and the egress allowlist.">
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/>
+            </linearGradient>
+            <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0L10 5L0 10z" fill="#6366f1"/>
+            </marker>
+            <marker id="arrt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0L10 5L0 10z" fill="#2dd4bf"/>
+            </marker>
+          </defs>
+
+          <!-- query -->
+          <g>
+            <rect x="14" y="112" width="150" height="56" rx="11" fill="#1a2336" stroke="#394763"/>
+            <text x="89" y="138" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">query</text>
+            <text x="89" y="156" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">from the agent</text>
+          </g>
+
+          <!-- code graph -->
+          <g>
+            <rect x="232" y="96" width="190" height="88" rx="12" fill="#161e30" stroke="url(#sg)" stroke-width="1.5"/>
+            <text x="327" y="128" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">local code graph</text>
+            <text x="327" y="150" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#aab4c2">emits minimal</text>
+            <text x="327" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#2dd4bf">(file, line-range) spans</text>
+          </g>
+
+          <!-- one span set node -->
+          <g>
+            <rect x="490" y="110" width="120" height="60" rx="11" fill="#1f2940" stroke="url(#sg)" stroke-width="1.5"/>
+            <text x="550" y="135" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">one span</text>
+            <text x="550" y="153" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">set</text>
+          </g>
+
+          <!-- context out -->
+          <g>
+            <rect x="700" y="40" width="206" height="68" rx="11" fill="#1a2336" stroke="#394763"/>
+            <text x="803" y="68" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13.5" fill="#2dd4bf">model context</text>
+            <text x="803" y="88" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">fewer tokens</text>
+          </g>
+
+          <!-- egress out -->
+          <g>
+            <rect x="700" y="172" width="206" height="68" rx="11" fill="#1a2336" stroke="#394763"/>
+            <text x="803" y="200" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13.5" fill="#6366f1">egress allowlist</text>
+            <text x="803" y="220" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">deny-by-default</text>
+          </g>
+
+          <!-- edges -->
+          <line x1="164" y1="140" x2="226" y2="140" stroke="#394763" stroke-width="2" marker-end="url(#arr)"/>
+          <line x1="422" y1="140" x2="484" y2="140" stroke="url(#sg)" stroke-width="2" marker-end="url(#arr)"/>
+          <path d="M610 134 C 660 120, 660 80, 696 74" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#arrt)"/>
+          <path d="M610 146 C 660 160, 660 200, 696 206" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+        </svg>
+      </div>
+
+      <div class="grid grid-3" style="margin-top: 26px;">
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/></svg></div>
+          <h3>Fewer tokens</h3>
+          <p>The model receives the spans it needs to answer, not the whole tree. You stop paying to ship context the query never touches.</p>
+        </div>
+        <div class="card reveal" data-d="1">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Deny-by-default egress</h3>
+          <p>Pin what your agent sees and that is all that can leave: verbatim repo lines outside the served set are blocked on the way to a tool call. A userspace tripwire, not a sandbox - <a href="docs/security.html#bypass">see what gets past it</a>.</p>
+        </div>
+        <div class="card reveal" data-d="2">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <h3>Signed audit log</h3>
+          <p>Run <code class="mono">serve --receipts</code> and every brokered tool call is written to a signed, hash-chained log. Edits, drops, and reorders break it; <code class="mono">herkos verify</code> flags a truncated log. Offline-verifiable with your key, local, fail-closed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WHAT GETS PAST ============ -->
+  <section class="section" id="bypass">
+    <div class="wrap">
+      <span class="eyebrow reveal">The published bypass</span>
+      <h2 class="reveal" data-d="1" style="max-width: 22ch;">Every other tool tells you what it stops. Here is what gets past Herkos.</h2>
+      <p class="lede reveal" data-d="2">A security tool that hides its gaps is worse than none. Each of these is checkable against the source.</p>
+      <div class="limits reveal" data-d="2" style="margin-top: 24px;">
+        <ul class="limit-list">
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>The broker gates tool names, not intent.</b> Approve <code>send_email</code> and an injected agent can still BCC an attacker through it - the postmark-mcp shape. A name allowlist cannot catch abuse of a tool you allowed.</span>
+          </li>
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>The content gate is a tripwire, not a wall.</b> Pin a span, then send the same repo line base64-encoded, reflowed, or split across two calls and it sails through. By design - it matches verbatim content only.</span>
+          </li>
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>The audit log can be truncated locally.</b> Edits, reorders, and mid-drops break <code>herkos verify</code>, but a local attacker with write access can chop the most recent entries. Herkos makes that <i>detectable</i> (the log shows no clean close), not impossible.</span>
+          </li>
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>The broker itself is userspace.</b> Its tool and content gates see what flows over MCP, not what a server opens on its own socket. <code>serve --isolate</code> closes that for servers that only need stdio: it starts the server in a kernel network namespace with no route out (proven here, unprivileged). A server that needs its own egress runs unisolated, and per-destination host allowlisting still needs elevated privilege.</span>
+          </li>
+        </ul>
+        <div class="callout">
+          <b>The only AI-agent security tool that ships its own bypass list.</b> Clone it and try to break the gate yourself - <code class="mono">make verify-clean</code> builds the committed tree from a throwaway worktree, no trust in us required. <a href="docs/security.html#bypass">Read the full threat model.</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVE RECEIPT ============ -->
+  <section class="section" id="receipt">
+    <div class="wrap">
+      <span class="eyebrow reveal">Live demo</span>
+      <h2 class="reveal" data-d="1">One binding, three roles.</h2>
+      <p class="lede reveal" data-d="2">Here is <code class="mono">make demo</code>: the same span set serves the model's context, bounds what may leave, and signs the receipt - one object doing all three. <a href="docs/dual-use-binding.html">Read the idea</a>.</p>
+
+      <div class="terminal reveal" data-d="2" style="margin-top: 28px;">
+        <div class="bar">
+          <span class="dots"><i></i><i></i><i></i></span>
+          <span class="title">herkos - SpanGate demo</span>
+        </div>
+<pre aria-label="SpanGate demo output"><span class="c-dim">$ make demo</span>
+<span class="c-dim">[1] CONTEXT</span>  minimal spans for "Authenticate":  auth.go:10-30  db.go:5-25
+            served <span class="c-num">40</span> / <span class="c-num">500</span> lines  -&gt;  <span class="c-ok">92% fewer tokens</span>
+<span class="c-dim">[2] EGRESS</span>   the SAME set is the deny-by-default allowlist:
+            allow  auth.go:12-18    (in the served set)  -&gt; <span class="c-ok">true</span>
+            deny   util.go:100-110  (never served)       -&gt; <span class="c-warn">blocked 256 bytes</span>
+<span class="c-dim">[3] RECEIPT</span>  offline-verifiable ed25519 Merkle:
+            signer key -&gt; <span class="c-ok">VERIFIED</span>      wrong key -&gt; <span class="c-warn">FAILED</span>
+            root=<span class="c-hash">02659078080f474c9fac20c7a83aa070f95cda014e0b0ea0994d7dde477d3008</span></pre>
+      </div>
+
+      <div class="terminal reveal" data-d="2" style="margin-top: 18px;">
+        <div class="bar">
+          <span class="dots"><i></i><i></i><i></i></span>
+          <span class="title">herkos scan - MCP security receipt</span>
+        </div>
+<pre aria-label="herkos scan output"><span class="c-dim">$ herkos scan --config .mcp.json</span>
+  <span class="c-warn">[unbrokered]</span> sketchy: launched directly, not through the broker
+  <span class="c-warn">[unpinned-install]</span> sketchy: npx installs an unpinned package; a bad update runs silently
+<span class="c-dim">herkos scan:</span> 0 over-scoped, 0 poisoned, 0 unrestricted-egress, <span class="c-warn">1</span> unbrokered, <span class="c-warn">1</span> unpinned-install, <span class="c-ok">0</span> remote - your code never left this machine</pre>
+      </div>
+      <p class="muted reveal" data-d="2" style="margin-top: 14px; font-size: 0.92rem;">That last line is true for this run because the scan only read local config. It is a statement about this run, not a guarantee about every future one. See <a href="docs/security.html">the security model</a> for where the line holds and where it does not, and the <a href="docs/case-studies.html">case studies</a> for what Herkos does and does not catch on real 2025 incidents.</p>
+    </div>
+  </section>
+
+  <!-- ============ QUICKSTART ============ -->
+  <section class="section" id="quickstart">
+    <div class="wrap">
+      <span class="eyebrow reveal">Quickstart</span>
+      <h2 class="reveal" data-d="1">Three commands.</h2>
+      <p class="lede reveal" data-d="2">Generate a local key, then put Herkos in front of any MCP server, allowing only the tools you name. Everything after <code class="mono">--</code> is the upstream server command.</p>
+
+      <div class="steps reveal" data-d="2" style="margin-top: 30px;">
+        <div class="step">
+          <span class="n" aria-hidden="true"></span>
+          <div>
+            <h3>Generate your signing key</h3>
+            <p>An ed25519 key, written <code class="mono">0600</code>. It stays on your machine and signs every receipt.</p>
+            <div class="cmd">
+              <pre><span class="c-prompt">$ </span>herkos keygen</pre>
+              <button class="copy-btn" type="button" aria-label="Copy command">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                <span class="lbl">Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="n" aria-hidden="true"></span>
+          <div>
+            <h3>Broker an upstream MCP server</h3>
+            <p>The agent's MCP client launches <code class="mono">herkos serve</code>. A <code class="mono">tools/call</code> to any tool you did not allow is blocked in-path and answered with a JSON-RPC error. The session keeps running.</p>
+            <div class="cmd">
+              <pre><span class="c-prompt">$ </span>herkos serve <span class="c-flag">--allow-tool</span> read_file <span class="c-flag">--allow-tool</span> list_dir -- npx -y @some/mcp-server</pre>
+              <button class="copy-btn" type="button" aria-label="Copy command">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                <span class="lbl">Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="n" aria-hidden="true"></span>
+          <div>
+            <h3>Audit any MCP config</h3>
+            <p>Scan an MCP config for over-scoped tools, poisoned descriptions, and servers with unrestricted egress. Get a receipt you can diff against a baseline.</p>
+            <div class="cmd">
+              <pre><span class="c-prompt">$ </span>herkos scan <span class="c-flag">--config</span> mcp.json</pre>
+              <button class="copy-btn" type="button" aria-label="Copy command">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                <span class="lbl">Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="reveal" data-d="2" style="margin-top: 8px;"><a href="docs/quickstart.html">Read the full quickstart</a> for the <code class="mono">register</code> flow that wires Herkos into an existing config.</p>
+    </div>
+  </section>
+
+  <!-- ============ HONEST LIMITS / PUBLISHED BYPASS ============ -->
+  <section class="section" id="limits">
+    <div class="wrap">
+      <span class="eyebrow reveal">Honest limits</span>
+      <h2 class="reveal" data-d="1">We publish our own bypass.</h2>
+      <p class="lede reveal" data-d="2">A security tool that hides its gaps is worse than no tool, because you trust it more than you should. Here is exactly what v1's in-path broker does not do yet.</p>
+
+      <div class="limits reveal" data-d="2" style="margin-top: 30px;">
+        <ul class="limit-list">
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>By default it gates the tool name, not the arguments.</b> The broker decides which <code>tools/call</code> reach the upstream by tool name. An allowed tool can carry data in its parameters. Without a served set pinned, Herkos does not inspect those.</span>
+          </li>
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>It only gates <code>tools/call</code>.</b> Other methods, including <code>resources/read</code>, are not gated by the in-path broker in v1.</span>
+          </li>
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b>Encode the bytes to get them past the content gate.</b> With a served set pinned (<code>--served-span</code>), Herkos blocks tool-call arguments carrying <i>verbatim</i> repo lines from outside that set. Base64, paraphrase, reflowed whitespace, or splitting a line across calls all defeat a verbatim match. The transformation-resistant, kernel-enforced boundary is on the roadmap.</span>
+          </li>
+          <li>
+            <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
+            <span><b><code>userspace</code> mode is advisory, not airtight.</b> The tool and content gates are auditing and deny-by-default control, not a kernel-enforced seal on bytes. <code>serve --isolate</code> adds a real kernel boundary - a server with no route out of its namespace - for servers that only need stdio; the OS-enforced per-destination egress mode (Landlock and seccomp, then eBPF) is still on the roadmap.</span>
+          </li>
+        </ul>
+
+        <div class="callout">
+          <b>State it plainly:</b> the userspace broker gives you deny-by-default tool control plus a signed audit trail, and <code>serve --isolate</code> a kernel network boundary for stdio-only servers. It is not yet a full per-destination egress seal. <a href="docs/security.html">Read the full threat model and bypass.</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OPEN SOURCE / CTA ============ -->
+  <section class="section" id="open-source">
+    <div class="wrap">
+      <div class="cta-band reveal">
+        <h2>Local-first. Open source. Apache-2.0.</h2>
+        <p>Written in Go. It runs on your machine and the key never leaves it. Read every line, file an issue, send a patch.</p>
+        <div class="pills reveal" data-d="1" style="justify-content: center; margin-bottom: 28px;">
+          <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/></svg> Deny-by-default</span>
+          <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9"/></svg> Signed receipts</span>
+          <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4" stroke-linecap="round" stroke-linejoin="round"/></svg> Local-first</span>
+          <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg> Apache-2.0</span>
+        </div>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="docs/quickstart.html">Get started</a>
+          <a class="btn btn-ghost" href="https://github.com/akhilesharora/herkos" rel="noopener">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            Star on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="col foot-brand">
+      <a class="brand" href="index.html" aria-label="Herkos home">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><linearGradient id="fgf" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+          <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+          <g fill="none" stroke="url(#fgf)" stroke-linecap="round">
+            <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+            <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+            <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+          <circle cx="32" cy="46" r="4.4" fill="url(#fgf)"/>
+        </svg>
+        <span class="word">Herkos</span>
+      </a>
+      <p>Your coding agent, on a leash you own. You hold the leash, not the cloud.</p>
+    </div>
+
+    <div class="col">
+      <h4>Docs</h4>
+      <a href="docs/index.html">Overview</a>
+      <a href="docs/install.html">Install</a>
+      <a href="docs/quickstart.html">Quickstart</a>
+      <a href="docs/cli.html">CLI reference</a>
+    </div>
+
+    <div class="col">
+      <h4>Concepts</h4>
+      <a href="docs/concepts.html">SpanGate &amp; receipts</a>
+      <a href="docs/dual-use-binding.html">The dual-use binding</a>
+      <a href="docs/case-studies.html">Case studies</a>
+      <a href="docs/security.html">Security model</a>
+      <a href="docs/security.html#bypass">Published bypass</a>
+    </div>
+
+    <div class="col">
+      <h4>Project</h4>
+      <a href="https://github.com/akhilesharora/herkos" rel="noopener">GitHub</a>
+      <a href="https://github.com/akhilesharora/herkos/issues" rel="noopener">Issues</a>
+      <a href="https://github.com/akhilesharora/herkos/blob/main/LICENSE" rel="noopener">License</a>
+    </div>
+
+    <div class="legal">
+      <span>Apache-2.0 licensed. &copy; <span data-year>2026</span> the Herkos authors.</span>
+      <span class="mono">Built local-first, in Go.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

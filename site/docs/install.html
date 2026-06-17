@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install - Herkos</title>
+<meta name="description" content="Install Herkos with go install, or build from source with git clone and make build. Written in Go, local-first, Apache-2.0.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html" aria-current="page">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Install</div>
+    <h1>Install</h1>
+    <p class="page-lede">Herkos is a single Go binary. Install it with <code>go install</code>, or clone the repo and build from source.</p>
+
+    <h2 id="prereqs">Prerequisites</h2>
+    <ul>
+      <li>Go 1.25 or newer (the module targets <code>go 1.25.0</code>).</li>
+      <li>A C toolchain for the tree-sitter parser bindings, since the parser is cgo-backed.</li>
+      <li>An MCP-capable agent to put Herkos in front of. Claude Code is the first target.</li>
+    </ul>
+
+    <h2 id="go-install">Install with go install</h2>
+    <p>This pulls the latest tagged build and drops the <code>herkos</code> binary in your <code>$GOBIN</code> (usually <code>$HOME/go/bin</code>).</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>go install github.com/akhilesharora/herkos/cmd/herkos@latest</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span class="lbl">Copy</span>
+      </button>
+    </div>
+    <p>Make sure <code>$GOBIN</code> (or <code>$HOME/go/bin</code>) is on your <code>PATH</code>, then confirm the binary runs:</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>herkos status</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span class="lbl">Copy</span>
+      </button>
+    </div>
+
+    <h2 id="from-source">Build from source</h2>
+    <p>Clone the repo and use the Makefile. <code>make build</code> wraps <code>go build ./...</code>.</p>
+    <div class="cmd">
+      <pre><span class="c-prompt">$ </span>git clone https://github.com/akhilesharora/herkos.git
+<span class="c-prompt">$ </span>cd herkos
+<span class="c-prompt">$ </span>make build</pre>
+      <button class="copy-btn" type="button" aria-label="Copy command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span class="lbl">Copy</span>
+      </button>
+    </div>
+
+    <h3 id="make-targets">Useful make targets</h3>
+    <table>
+      <thead><tr><th>Target</th><th>What it runs</th></tr></thead>
+      <tbody>
+        <tr><td><code>make build</code></td><td><code>go build ./...</code></td></tr>
+        <tr><td><code>make race</code></td><td><code>go test ./... -race</code></td></tr>
+        <tr><td><code>make lint</code></td><td><code>golangci-lint run</code></td></tr>
+        <tr><td><code>make check</code></td><td>build + vet + race + lint</td></tr>
+        <tr><td><code>make verify-clean</code></td><td>build, vet, and race the committed tree (HEAD) from a throwaway worktree</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <span class="label">Verify before you trust it</span>
+      <p>This is a security tool. Build it from source, read the diff, run <code>make check</code>, and decide for yourself. Local-first means you do not have to take anyone's word for what the binary does.</p>
+    </div>
+
+    <h2 id="next">Next</h2>
+    <p>With the binary on your path, head to the <a href="quickstart.html">quickstart</a> to generate a key and put Herkos in front of an MCP server.</p>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="index.html">&larr; Overview</a>
+        <a href="quickstart.html">Quickstart &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

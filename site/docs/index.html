@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs - Herkos</title>
+<meta name="description" content="Herkos documentation. A local-first context and egress broker for AI coding agents. Start with the overview, then install and run the quickstart.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html" aria-current="page">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / Docs / Overview</div>
+    <h1>Documentation</h1>
+    <p class="page-lede">Herkos is a local-first context and egress broker for AI coding agents. It runs on your machine, in front of the agent you already use, and decides what the model sees and what is allowed to leave.</p>
+
+    <h2 id="what">What Herkos does</h2>
+    <p>An AI coding agent makes a query, your editor packs up context, and that context goes to a model endpoint. You pay for the tokens, and you have no record of which lines of your code went over the wire. Herkos sits in that path and applies one mechanism to both problems.</p>
+    <p>That mechanism is <strong>SpanGate</strong>. For each query, Herkos's local code graph emits a minimal set of <code>(file, line-range)</code> spans. The same set is both the model's context (fewer tokens) and the egress allowlist (deny-by-default). Every answer ships a signed Merkle receipt of which spans touched the model.</p>
+
+    <div class="note">
+      <span class="label">The throughline</span>
+      <p>The minimal context an agent needs is exactly the only thing it should be allowed to send. One set of spans, two jobs. You hold the leash, not the cloud.</p>
+    </div>
+
+    <h2 id="pieces">The pieces</h2>
+    <table>
+      <thead><tr><th>Piece</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SpanGate</strong></td><td>The core. Emits the minimal span set and uses it as both context and allowlist.</td></tr>
+        <tr><td><strong>The broker</strong></td><td><code>herkos serve</code> sits in-path in front of an MCP server and gates outbound tool calls by tool name, deny-by-default.</td></tr>
+        <tr><td><strong>Receipts</strong></td><td>Signed Merkle receipts of which spans touched the model, verifiable locally with your own key.</td></tr>
+        <tr><td><strong>Scanner</strong></td><td><code>herkos scan</code> audits an MCP config for over-scoped tools, poisoned descriptions, and unrestricted egress.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="next">Where to go next</h2>
+    <ul>
+      <li><a href="install.html">Install</a> with <code>go install</code> or build from source.</li>
+      <li><a href="quickstart.html">Quickstart</a>: keygen, register, serve, with the real commands.</li>
+      <li><a href="concepts.html">Concepts</a>: SpanGate, receipts, and the two enforcement modes.</li>
+      <li><a href="dual-use-binding.html">The dual-use binding</a>: the one idea, and exactly where it holds and does not.</li>
+      <li><a href="case-studies.html">Case studies</a>: five real 2025 MCP incidents, and what Herkos would actually have done.</li>
+      <li><a href="security.html">Security model</a>: the threat model and the bypass we publish ourselves.</li>
+      <li><a href="cli.html">CLI reference</a>: every command and flag.</li>
+    </ul>
+
+    <div class="note warn">
+      <span class="label">Status</span>
+      <p>Early development, working end to end. The SpanGate core, the tree-sitter parser, the CLI, and the live in-path broker all work today. The broker's egress guard is tool-name only for now, and <code>userspace</code> mode is advisory rather than kernel-enforced. Not production-secure yet. See the <a href="security.html">security model</a> for exactly what holds and what does not.</p>
+    </div>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="install.html">Install &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

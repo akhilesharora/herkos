@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCPoison rug-pull (CVE-2025-54136) - Herkos case study</title>
+<meta name="description" content="MCPoison (CVE-2025-54136): a Cursor MCP config approved once was trusted forever, so a post-approval swap gave silent persistent RCE. What Herkos catches (baseline drift) and what it does not (live pinning).">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html" aria-current="page">Case studies</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / <a href="case-studies.html">Case studies</a> / MCPoison</div>
+    <h1>Rug-pull after approval: MCPoison</h1>
+    <p class="page-lede">A Cursor MCP server was approved once, then silently swapped for a malicious one. The approval stuck to the entry's name, not its contents, so the swap inherited the trust and ran with no new prompt. Herkos does <em>not</em> catch this swap, and saying so is the point of this page. What its <code>scan</code> does catch is the rug-pull's close cousin: a tool whose <em>description</em> is poisoned after you approved it.</p>
+
+    <div class="note">
+      <span class="label">At a glance</span>
+      <p><strong>Disclosed:</strong> Check Point Research, named "MCPoison", reported to Cursor on Jul 16 2025. <strong>Fixed:</strong> Cursor 1.3, Jul 29 2025. <strong>CVE:</strong> CVE-2025-54136. <strong>Severity:</strong> CVSS 3.1 base 7.2 HIGH (the CNA score, GitHub on behalf of Anysphere/Cursor) and 8.8 HIGH (NVD); the only difference between the two vectors is privileges-required. <strong>Affected:</strong> Cursor versions prior to 1.3. <strong>Sources:</strong> <a href="https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/" rel="noopener">Check Point Research</a>, <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-54136" rel="noopener">NVD</a>, <a href="https://github.com/cursor/cursor/security/advisories/GHSA-24mc-g4xr-4395" rel="noopener">Cursor GHSA-24mc-g4xr-4395</a>.</p>
+    </div>
+
+    <h2 id="what-happened">What happened</h2>
+    <p>Cursor keyed an MCP approval to "this entry was approved once" rather than to a hash of the entry's actual command and arguments. Once approved, later edits to the same entry were trusted without a new prompt. The attack is four steps:</p>
+
+    <div class="diagram" style="margin: 24px 0;">
+      <svg viewBox="0 0 920 200" role="img" aria-label="A config approved once is trusted forever; the attacker swaps its command afterward and it runs silently on the next open.">
+        <defs>
+          <marker id="mpa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7b8694"/></marker>
+        </defs>
+        <rect x="20" y="34" width="250" height="92" rx="12" fill="#1a2336" stroke="#2dd4bf" stroke-width="1.3"/>
+        <text x="145" y="62" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#2dd4bf">1. approve once</text>
+        <text x="145" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#e7ecf3">command: echo</text>
+        <text x="145" y="106" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">harmless, user approves</text>
+        <rect x="335" y="34" width="250" height="92" rx="12" fill="#1a2336" stroke="#f5b14c" stroke-width="1.3"/>
+        <text x="460" y="62" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#f5b14c">2. swap the payload</text>
+        <text x="460" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#e7ecf3">command: &lt;malicious&gt;</text>
+        <text x="460" y="106" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">same entry, edited later</text>
+        <rect x="650" y="34" width="250" height="92" rx="12" fill="#1a2336" stroke="#f5b14c" stroke-width="1.3"/>
+        <text x="775" y="62" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#f5b14c">3. runs silently</text>
+        <text x="775" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#e7ecf3">no new prompt</text>
+        <text x="775" y="106" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">persistent on every open</text>
+        <path d="M270 80 L331 80" stroke="#7b8694" stroke-width="2" fill="none" marker-end="url(#mpa)"/>
+        <path d="M585 80 L646 80" stroke="#7b8694" stroke-width="2" fill="none" marker-end="url(#mpa)"/>
+        <text x="20" y="166" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">approval was bound to the entry's name, not a hash of its contents - so the swap inherited the trust</text>
+      </svg>
+    </div>
+    <ol>
+      <li><strong>Plant a benign config.</strong> The attacker commits an innocuous MCP server entry to a shared repo - Check Point used <code>.cursor/rules/mcp.json</code> with a harmless command like <code>echo</code>.</li>
+      <li><strong>Victim approves once.</strong> A collaborator opens the project, Cursor prompts for MCP approval, and the victim approves the harmless-looking entry. The approval is persisted.</li>
+      <li><strong>Attacker swaps the payload.</strong> The attacker edits the <em>same</em> entry's <code>command</code> / <code>args</code> to something malicious. Per Check Point: "the contents - such as command and args - can be modified later without triggering a new approval prompt."</li>
+      <li><strong>Silent persistent execution.</strong> The next time the victim opens the project, the modified command runs automatically, with no prompt. Because the config lives in the repo, it re-runs on every open - persistent, silent, remote code execution.</li>
+    </ol>
+    <p>Root cause in one line: approval was bound to the entry's identity, not to its contents, so mutating the contents after approval bypassed re-validation. The 1.3 fix re-triggers an approval prompt on any change, even adding a single space.</p>
+
+    <h2 id="herkos">Where Herkos helps, and where it does not</h2>
+    <p>Be precise, because this is the case a skeptic pushes on hardest:</p>
+    <ul>
+      <li><strong>The command/args swap: NOT caught.</strong> MCPoison mutates a server's <code>command</code> and <code>args</code>. Herkos's <code>scan --baseline</code> compares tool <em>descriptions</em> only - it never parses command or args - so the canonical MCPoison swap is invisible to it. Blocking a changed config before it runs is trust-on-first-use pinning, which <a href="https://github.com/trailofbits/mcp-context-protector" rel="noopener">Trail of Bits' <code>mcp-context-protector</code></a> does and Herkos does not. It would be wrong to claim Herkos catches this CVE.</li>
+      <li><strong>The description rug-pull: caught.</strong> The sibling attack - a server that keeps its command but poisons a tool's <em>description</em> after approval (the tool-poisoning / line-jumping shape) - <em>is</em> caught: <code>scan --baseline</code> flags a description that drifted from your known-good snapshot. That is the real, demonstrable capability, shown below.</li>
+      <li><strong>Record: supporting.</strong> A per-session audit log (<code>serve --receipts</code>) anchors what actually ran; tie it to the config you approved and a later change is evident across sessions.</li>
+    </ul>
+
+    <h2 id="receipt">Here is the receipt</h2>
+    <p>A real run of this repo's binary - the <em>description</em> rug-pull, not the command swap. The trusted baseline pins what <code>deploy/run</code> was approved to do; the scanned config carries a description that drifted to smuggle an instruction, and Herkos flags it:</p>
+    <div class="terminal" style="margin: 16px 0;">
+      <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="title">herkos scan --baseline</span></div>
+<pre aria-label="herkos scan baseline drift output"><span class="c-dim">$ </span>herkos scan <span class="c-flag">--config</span> deploy.manifest.json <span class="c-flag">--baseline</span> deploy.baseline.json
+  <span class="c-warn">[poisoned]</span> deploy/run: tool description differs from baseline
+<span class="c-dim">herkos scan:</span> <span class="c-ok">0</span> over-scoped, <span class="c-warn">1</span> poisoned, <span class="c-ok">0</span> unrestricted-egress, <span class="c-ok">0</span> unbrokered, <span class="c-ok">0</span> unpinned-install, <span class="c-ok">0</span> remote - your code never left this machine</pre>
+    </div>
+    <p>Run it in CI against a committed baseline and a post-approval swap fails the check instead of running unnoticed.</p>
+
+    <div class="note warn">
+      <span class="label">The honest boundary</span>
+      <p>Description-drift detection is real; catching MCPoison's command/args swap is not, and neither is live prevention. If your threat model is "block a changed config before it executes," you want a TOFU-pinning layer like <code>mcp-context-protector</code>, not Herkos. Herkos's honest contribution here is narrow: it flags description poisoning against a baseline and signs a record of what ran. (Note: do not confuse MCPoison / CVE-2025-54136 with the separate Cursor "CurXecute" bug, CVE-2025-54135.)</p>
+    </div>
+
+    <div class="docs-foot">
+      <a class="edit" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Edit on GitHub
+      </a>
+      <div class="pager">
+        <a href="case-postmark.html">&larr; postmark-mcp</a>
+        <a href="case-studies.html">All case studies &rarr;</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>
