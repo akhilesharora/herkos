@@ -24,11 +24,16 @@ func scanCmd(args []string, stdout, stderr io.Writer) int {
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
-	if *cfgPath == "" {
-		fmt.Fprintln(stderr, "scan: -config is required")
+	// Accept both `herkos scan -config <path>` and the ergonomic `herkos scan <path>`.
+	path := *cfgPath
+	if path == "" {
+		path = fs.Arg(0)
+	}
+	if path == "" {
+		fmt.Fprintln(stderr, "scan: provide a config path, e.g. herkos scan ~/.claude.json")
 		return 2
 	}
-	cfg, err := scan.LoadConfig(*cfgPath)
+	cfg, err := scan.LoadConfig(path)
 	if err != nil {
 		fmt.Fprintf(stderr, "scan: %v\n", err)
 		return 1

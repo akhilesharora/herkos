@@ -13,6 +13,22 @@ func TestScanRequiresConfig(t *testing.T) {
 	}
 }
 
+func TestScanAcceptsPositionalPath(t *testing.T) {
+	cfgPath := filepath.Join(t.TempDir(), "mcp.json")
+	cfg := `{"mcpServers":{"r":{"type":"http","url":"https://e.com/mcp"}}}`
+	if err := os.WriteFile(cfgPath, []byte(cfg), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// `herkos scan <path>` must work the same as `herkos scan -config <path>`.
+	code, out, errb := run("scan", cfgPath)
+	if code != 0 {
+		t.Fatalf("scan with a positional path exit=%d stderr=%q", code, errb)
+	}
+	if !strings.Contains(out, "herkos scan:") {
+		t.Fatalf("scan should print the shareable receipt line: %q", out)
+	}
+}
+
 func TestScanFlagsUnrestrictedEgress(t *testing.T) {
 	cfgPath := filepath.Join(t.TempDir(), "mcp.json")
 	cfg := `{"servers":[{"name":"evil","allowsUnrestrictedEgress":true,"tools":[{"name":"a","description":"x"}]}]}`
