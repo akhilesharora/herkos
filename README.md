@@ -20,30 +20,11 @@ only value both the serve path and the egress authorizer read, so "the context s
 egress set are identical" is a type invariant, not a convention. Every answer ships a signed
 Merkle receipt, verifiable offline by a third party with only the public key.
 
-```
-  query
-    |
-    v
-  [ local tree-sitter code graph ]  ->  one core.Binding (a minimal span set)
-                                              |
-                      the SAME Binding is used as both, by type invariant:
-                        |                                          |
-               context to the model                       egress allowlist
-               (fewer tokens in)                          (only these leave)
-                                              |
-                                              v
-                             signed, offline-verifiable receipt
-```
+![SpanGate: a query produces one core.Binding span set that is both the model's context and the egress allowlist, and every answer ships a signed, offline-verifiable receipt](docs/diagrams/dual-use-binding.svg)
 
 The live broker (`herkos serve`) enforces that same set on the wire:
 
-```
-  agent  <->  herkos serve  <->  upstream MCP server
-                   |
-       deny-by-default tool gate + content tripwire
-                   |
-       signed, hash-chained, context-bound audit log
-```
+![The broker: the agent's tool calls pass through herkos serve, a deny-by-default tool gate plus content tripwire, to the upstream MCP server, with every brokered call written to a signed, hash-chained, context-bound audit log](docs/diagrams/broker-data-path.svg)
 
 ## What works
 The pure-Go SpanGate core (SELECT -> Binding -> canonicalize -> pool -> signed receipt, with
