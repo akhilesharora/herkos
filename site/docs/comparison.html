@@ -145,11 +145,6 @@
       <li>The audit receipt is ed25519-signed, sha256 hash-chained, and offline-verifiable with only the public key; it commits the served-context fingerprint; an edit, a truncation, a flipped context byte, or a wrong key all fail <code>herkos verify</code>.</li>
       <li><code>herkos scan</code> audits an MCP config for unbrokered, unpinned-install, over-scoped, poisoned (drift against a baseline), unrestricted-egress, and remote servers.</li>
     </ul>
-
-    <div class="note">
-      <span class="label">Claims this project will not make</span>
-      <p>Checkable-false, so absent here by design: "first or only to bind context to egress" (the literature predates it); "strongest or most complete signed receipt"; "best egress isolation or sandbox"; "blocks data exfiltration" (the tripwire does not); "enforces a network-destination allowlist" (the netns is all-or-nothing); "cross-platform"; "more mature or more battle-tested than the field".</p>
-    </div>
   </main>
 </div>
 
