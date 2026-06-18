@@ -87,7 +87,7 @@
         <tr><td><strong>The broker</strong></td><td><code>herkos serve</code> sits in-path in front of an MCP server and gates outbound tool calls by tool name, deny-by-default.</td></tr>
         <tr><td><strong>Span receipt</strong></td><td>A signed Merkle receipt of which spans touched the model, verifiable locally with your own key.</td></tr>
         <tr><td><strong>Serve audit log</strong></td><td><code>herkos serve --receipts</code> writes a separate per-call, signed, hash-chained log of every brokered <code>tools/call</code> (tool name, request hash, allow or deny), verifiable offline with just the public key.</td></tr>
-        <tr><td><strong>Scanner</strong></td><td><code>herkos scan</code> audits an MCP config for over-scoped tools, poisoned descriptions, and unrestricted egress.</td></tr>
+        <tr><td><strong>Scanner</strong></td><td><code>herkos scan</code> audits an MCP config for over-scoped tools, poisoned descriptions (drift from a baseline), and unrestricted egress.</td></tr>
       </tbody>
     </table>
 
