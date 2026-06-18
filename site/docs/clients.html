@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Use Herkos with your agent - Herkos</title>
+<meta name="description" content="Herkos is a transparent stdio MCP proxy, so it works with any MCP client - Claude Code, Cursor, Cline, Codex, and more. Wrapping a server is one config change: point the command at herkos serve.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <a href="clients.html" aria-current="page">Use with your agent</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html">Comparison</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Use with your agent</div>
+    <h1>Use Herkos with your agent</h1>
+    <p class="page-lede">Herkos is a transparent stdio MCP proxy. It presents as an MCP server to whatever launches it and forwards to the real server, so it works in front of <strong>any</strong> MCP client - Claude Code, Cursor, Cline, Codex, and more - with no client-specific code. Wrapping a server is one config change.</p>
+
+    <h2 id="pattern">The one pattern</h2>
+    <p>Wherever your client lists its MCP servers, a server is a <code>command</code> plus <code>args</code>. To broker it, point the command at <code>herkos serve</code> and pass the real command after <code>--</code>. Everything else - the server, its environment, the agent - is unchanged.</p>
+    <table>
+      <thead><tr><th></th><th><code>command</code> + <code>args</code></th></tr></thead>
+      <tbody>
+        <tr><td><strong>before</strong></td><td><code>npx -y @modelcontextprotocol/server-github</code></td></tr>
+        <tr><td><strong>after</strong></td><td><code>herkos serve --allow-tool get_issue -- npx -y @modelcontextprotocol/server-github</code></td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <span class="label">What this buys you</span>
+      <p>The agent can call only the tools you <code>--allow-tool</code>, and (as of the tool-list filter) only <em>sees</em> those tools in its catalog. Add <code>--receipts &lt;dir&gt;</code> for a signed audit log, and <code>--isolate</code> to cut the server's own network. The exact config file differs by client; the wrap is always the same.</p>
+    </div>
+
+    <h2 id="json-family">JSON config clients (Claude Code, Cursor, Cline, Windsurf)</h2>
+    <p>These store MCP servers as <code>{"mcpServers": {name: {command, args}}}</code> JSON, in their own location (for example Claude Code's <code>.mcp.json</code> or <code>~/.claude.json</code>; Cursor's <code>~/.cursor/mcp.json</code>). The wrapped entry:</p>
+    <div class="cmd"><pre>{
+  "mcpServers": {
+    "github": {
+      "command": "herkos",
+      "args": ["serve", "--allow-tool", "get_issue", "--",
+               "npx", "-y", "@modelcontextprotocol/server-github"]
+    }
+  }
+}</pre></div>
+    <p>For this format, <code>herkos register</code> does the rewrite for you, in place, leaving no un-brokered entry behind:</p>
+    <div class="cmd"><pre><span class="c-prompt">$ </span>herkos register <span class="c-flag">--config</span> .mcp.json <span class="c-flag">--server</span> github <span class="c-flag">--allow-tool</span> get_issue</pre></div>
+
+    <h2 id="codex">Codex</h2>
+    <p>Codex stores MCP servers as TOML in <code>~/.codex/config.toml</code>. Same wrap, TOML syntax:</p>
+    <div class="cmd"><pre>[mcp_servers.github]
+command = "herkos"
+args = ["serve", "--allow-tool", "get_issue", "--",
+        "npx", "-y", "@modelcontextprotocol/server-github"]</pre></div>
+    <p>The broker itself is verified to speak the MCP stdio protocol both ways; the TOML config above is the wrapping pattern in Codex's format. <code>herkos register</code> does not rewrite TOML yet, so this one is hand-edited for now.</p>
+
+    <h2 id="other">VS Code and other MCP clients</h2>
+    <p>VS Code's native MCP support uses a <code>{"servers": {...}}</code> object (note the key) in <code>.vscode/mcp.json</code> or settings; the entry is the same <code>command</code> / <code>args</code> wrap. Any other client that launches a stdio MCP server works identically: find where it lists servers, and point the command at <code>herkos serve -- &lt;the real command&gt;</code>.</p>
+
+    <div class="note warn">
+      <span class="label">Honest scope</span>
+      <p>The broker is client-agnostic, verified end to end with the official <code>@modelcontextprotocol/sdk</code> client - the same library Claude Code, Cursor, and Cline use - connecting through Herkos to a reference server: it completed the handshake, saw only the allowlisted tools, called an allowed one, and had a denied one blocked in-path. Config <em>locations</em> vary by client and change over time, so check your client's own MCP docs for the exact file; the wrap (command points at <code>herkos serve</code>) does not change. <code>scan</code> and <code>register</code> currently understand the <code>{"mcpServers": {...}}</code> JSON family (Claude Code, Cursor, Cline, Windsurf); Codex TOML and the VS Code <code>servers</code> key are hand-edited for now.</p>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>
