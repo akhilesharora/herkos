@@ -54,9 +54,9 @@ func TestPassesNonToolsListThrough(t *testing.T) {
 	f := New("echo")
 	for _, msg := range []string{
 		`{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"ok"}]}}`, // tools/call response
-		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"echo"}}`,      // a request, not a response
-		`{"jsonrpc":"2.0","id":4,"result":{}}`,                                         // result without tools
-		`{"jsonrpc":"2.0","id":5,"error":{"code":-32000,"message":"x"}}`,               // an error response
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"echo"}}`,     // a request, not a response
+		`{"jsonrpc":"2.0","id":4,"result":{}}`,                                        // result without tools
+		`{"jsonrpc":"2.0","id":5,"error":{"code":-32000,"message":"x"}}`,              // an error response
 		`not json at all`,
 	} {
 		if got := string(f.Filter([]byte(msg))); got != msg {
