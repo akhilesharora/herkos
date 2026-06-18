@@ -317,3 +317,31 @@ func TestWrapAll(t *testing.T) {
 		t.Fatalf("wrapped local = %#v, want %#v", local, want)
 	}
 }
+
+func TestWrapAllServersKey(t *testing.T) {
+	// VS Code / GitHub Copilot store servers under "servers", not "mcpServers".
+	path := seed(t, `{"servers":{"local":{"type":"stdio","command":"npx","args":["-y","srv"]}}}`)
+	discover := func(string, []string) ([]string, error) { return []string{"read"}, nil }
+	results, err := WrapAll(path, discover)
+	if err != nil {
+		t.Fatalf("WrapAll: %v", err)
+	}
+	if len(results) != 1 || !results[0].Wrapped {
+		t.Fatalf("the servers-key local server must be wrapped: %+v", results)
+	}
+	root := readConfig(t, path)
+	if _, ok := root["mcpServers"]; ok {
+		t.Fatal("WrapAll must write back under the original key, not move a servers config to mcpServers")
+	}
+	servers, ok := root["servers"].(map[string]any)
+	if !ok {
+		t.Fatalf("servers key missing or not an object after wrap: %#v", root)
+	}
+	e, _ := servers["local"].(map[string]any)
+	if cmd, _ := e["command"].(string); cmd != "herkos" {
+		t.Fatalf("local not brokered under the servers key: %#v", e)
+	}
+	if e["type"] != "stdio" {
+		t.Errorf("the 'type' field must be preserved on the wrapped entry: %#v", e)
+	}
+}

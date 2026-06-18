@@ -291,3 +291,43 @@ func TestScanFlagsHTTPRemote(t *testing.T) {
 		}
 	}
 }
+
+// TestLoadConfigVSCodeServers pins the VS Code / GitHub Copilot shape: a "servers" OBJECT is a
+// launch config (like mcpServers), while a "servers" ARRAY stays the security manifest.
+func TestLoadConfigVSCodeServers(t *testing.T) {
+	dir := t.TempDir()
+	obj := filepath.Join(dir, "vscode.json")
+	if err := os.WriteFile(obj, []byte(`{"servers":{
+		"local": {"type":"stdio","command":"npx","args":["-y","srv"]},
+		"api":   {"type":"http","url":"https://api.example.com/mcp"}
+	}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	c, err := LoadConfig(obj)
+	if err != nil {
+		t.Fatalf("LoadConfig vscode object: %v", err)
+	}
+	if len(c.Servers) != 2 {
+		t.Fatalf("want 2 launch servers from a servers object, got %d: %+v", len(c.Servers), c.Servers)
+	}
+	for _, s := range c.Servers {
+		if !s.fromLaunch {
+			t.Errorf("server %q from a servers object must be fromLaunch", s.Name)
+		}
+	}
+	if r := Scan(c, nil); r.count(Remote) != 1 || r.count(Unbrokered) != 1 {
+		t.Fatalf("servers-object launch config not scanned as launch config; findings=%+v", r.Findings)
+	}
+
+	arr := filepath.Join(dir, "manifest.json")
+	if err := os.WriteFile(arr, []byte(`{"servers":[{"name":"x","allowsUnrestrictedEgress":true}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	m, err := LoadConfig(arr)
+	if err != nil {
+		t.Fatalf("LoadConfig manifest array: %v", err)
+	}
+	if len(m.Servers) != 1 || m.Servers[0].fromLaunch {
+		t.Fatalf("a servers array must stay a manifest, not a launch config: %+v", m.Servers)
+	}
+}

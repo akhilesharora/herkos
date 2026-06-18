@@ -63,12 +63,12 @@ func Register(configPath string, serveArgs []string) error {
 		return err
 	}
 
-	servers, err := serversMap(root)
+	servers, key, err := serversMap(root)
 	if err != nil {
 		return err
 	}
 	servers[serverName] = herkosEntry(serveArgs)
-	root[mcpServersKey] = servers
+	root[key] = servers
 
 	return save(configPath, root)
 }
@@ -86,7 +86,7 @@ func Wrap(configPath, name string, allow []string) error {
 	if err != nil {
 		return err
 	}
-	servers, err := serversMap(root)
+	servers, key, err := serversMap(root)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func Wrap(configPath, name string, allow []string) error {
 		return err
 	}
 	servers[name] = wrapped
-	root[mcpServersKey] = servers
+	root[key] = servers
 	return save(configPath, root)
 }
 
@@ -159,7 +159,7 @@ func WrapAll(configPath string, discover Discoverer) ([]WrapResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	servers, err := serversMap(root)
+	servers, key, err := serversMap(root)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func WrapAll(configPath string, discover Discoverer) ([]WrapResult, error) {
 		results = append(results, WrapResult{Name: name, Wrapped: true, Tools: tools})
 	}
 	if wrappedAny {
-		root[mcpServersKey] = servers
+		root[key] = servers
 		if err := save(configPath, root); err != nil {
 			return results, err
 		}
@@ -272,7 +272,7 @@ func Unregister(configPath string) error {
 		return err
 	}
 
-	servers, err := serversMap(root)
+	servers, key, err := serversMap(root)
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func Unregister(configPath string) error {
 		}
 		servers[name] = restored
 	}
-	root[mcpServersKey] = servers
+	root[key] = servers
 
 	return save(configPath, root)
 }
@@ -330,19 +330,29 @@ func load(configPath string) (map[string]any, error) {
 	return root, nil
 }
 
-// serversMap returns the mutable mcpServers map from root, creating an empty one
-// if the key is absent. A present-but-non-object mcpServers value is an error
-// rather than something to silently overwrite.
-func serversMap(root map[string]any) (map[string]any, error) {
-	raw, ok := root[mcpServersKey]
+// serversMap returns the mutable server map from root and the top-level key it lives under:
+// "mcpServers" (Claude Code, Cursor, Cline, Windsurf) or "servers" (VS Code, GitHub Copilot).
+// It prefers mcpServers when both exist, falls back to a "servers" object, and defaults to
+// mcpServers for a new or empty config so first-time registration writes the common key. A
+// present-but-non-object value is an error rather than something to silently overwrite.
+func serversMap(root map[string]any) (map[string]any, string, error) {
+	key := mcpServersKey
+	if _, ok := root[mcpServersKey]; !ok {
+		if v, ok := root["servers"]; ok {
+			if _, isObject := v.(map[string]any); isObject {
+				key = "servers"
+			}
+		}
+	}
+	raw, ok := root[key]
 	if !ok || raw == nil {
-		return map[string]any{}, nil
+		return map[string]any{}, key, nil
 	}
 	servers, ok := raw.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("config field %q is %T, want object", mcpServersKey, raw)
+		return nil, key, fmt.Errorf("config field %q is %T, want object", key, raw)
 	}
-	return servers, nil
+	return servers, key, nil
 }
 
 // save backs up the current configPath (if any) to configPath+".bak" and then
