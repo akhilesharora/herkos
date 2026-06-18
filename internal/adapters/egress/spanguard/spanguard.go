@@ -1,16 +1,19 @@
 // Package spanguard is the broker egress Guard that makes SpanGate's dual-use invariant
 // LIVE on the wire: the same span set the model was served (a [core.Binding]) is the set
 // outbound tool-call bytes are authorized against. It recovers provenance by recognizing
-// VERBATIM repo lines in a tools/call's arguments (via a [Lexicon] built from the
-// code-graph index) and denies the call if it carries a repo line whose every containing
-// span lies outside the binding - i.e. un-served code trying to leave.
+// repo lines in a tools/call's arguments (via a [Lexicon] built from the code-graph index)
+// and denies the call if it carries a repo line whose every containing span lies outside
+// the binding - i.e. un-served code trying to leave. Lines are matched after a shallow
+// normalization (see normalize): Unicode NFC, lowercase, and whitespace-run collapse, so a
+// trivial reflow or recase of a served line does not slip past a byte-verbatim match.
 //
 // Honesty, stated plainly so nothing is mistaken for a wall it is not:
 //
-//   - This is a TRIPWIRE, not a boundary. It matches verbatim source lines only. An
-//     adversary who base64s, paraphrases, reflows, or chunks the code defeats it, exactly
-//     as any userspace content filter is defeated. The airtight boundary is kernel-enforced
-//     (Landlock/seccomp/eBPF) and is a separate, ENV-gated mode.
+//   - This is a TRIPWIRE, not a boundary. Normalization buys exactly whitespace- and
+//     case-insensitivity; it stops there. An adversary who base64s, paraphrases, token-
+//     rewrites, or chunks the code still defeats it, exactly as any userspace content filter
+//     is defeated. The airtight boundary is kernel-enforced (Landlock/seccomp/eBPF) and is a
+//     separate, ENV-gated mode.
 //   - Only lines that fall inside an indexed symbol span are fingerprinted. Code outside a
 //     parsed top-level declaration (and any line shorter than the min length, or with no
 //     letter/digit) is not gated, to keep false positives off ordinary prose and braces.
@@ -32,6 +35,8 @@ import (
 	"encoding/json"
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/akhilesharora/herkos/internal/core"
 )
@@ -117,9 +122,23 @@ func (l *Lexicon) Size() int {
 	return len(l.lines)
 }
 
-// normalize trims surrounding whitespace so indentation differences do not defeat a match.
-// Interior whitespace is preserved so distinct lines stay distinct.
-func normalize(s string) string { return strings.TrimSpace(s) }
+// normalize folds away the trivial line edits that would otherwise let a reflow or recase
+// slip a repo line past a byte-verbatim match. It applies, in order: Unicode NFC (so a
+// precomposed char and its combining-sequence twin compare equal), lowercase, collapse of
+// every run of whitespace to a single ASCII space, and a trim of leading/trailing space.
+// It is applied to both sides of every comparison (lines entering the lexicon and outbound
+// candidate lines), so the match is normalized-vs-normalized.
+//
+// This is deliberately shallow. It defeats whitespace and case evasions only; a paraphrase,
+// a base64/encoding, or any token-level rewrite still passes, exactly as the package doc
+// states. Widening normalization further (e.g. stripping all whitespace, or token folding)
+// would start matching unrelated prose and turn the tripwire into a false-positive source.
+func normalize(s string) string {
+	s = norm.NFC.String(s)
+	s = strings.ToLower(s)
+	s = strings.Join(strings.Fields(s), " ")
+	return s
+}
 
 // qualifies reports whether a normalized line is worth fingerprinting: long enough and
 // carrying at least one letter or digit (so pure punctuation/braces are skipped).

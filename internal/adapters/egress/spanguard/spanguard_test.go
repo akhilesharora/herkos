@@ -89,6 +89,36 @@ func TestUnservedLineNestedArgBlocked(t *testing.T) {
 	}
 }
 
+func TestReflowedWhitespaceBlocked(t *testing.T) {
+	g := servedGuard(t)
+	// The SAME unserved line with its single interior spaces expanded to runs of spaces and
+	// tabs. Byte-verbatim matching misses this; normalized matching must still trip.
+	reflowed := "derived :=  hkdf.Expand(sha256.New,\tmasterKey,   nil)"
+	if allow, _ := g.Check(toolCall(t, "leaking:\n\t"+reflowed)); allow {
+		t.Fatal("unserved repo line with reflowed interior whitespace must be blocked")
+	}
+}
+
+func TestRecasedLineBlocked(t *testing.T) {
+	g := servedGuard(t)
+	// The SAME unserved line, recased. Normalization lowercases both sides, so it must trip.
+	recased := "DERIVED := HKDF.Expand(SHA256.New, masterKey, nil)"
+	if allow, _ := g.Check(toolCall(t, "leaking:\n\t"+recased)); allow {
+		t.Fatal("unserved repo line with changed case must be blocked")
+	}
+}
+
+func TestParaphraseStillPasses(t *testing.T) {
+	g := servedGuard(t)
+	// Honest residual: normalization only defeats whitespace/case reflow. A genuine
+	// paraphrase that renames the variable and call expression carries the same intent but no
+	// fingerprinted line, so it PASSES. This guard is a tripwire, not a boundary.
+	paraphrase := "key := hkdf.Extract(sha512.New, masterKey, salt)"
+	if allow, _ := g.Check(toolCall(t, "leaking:\n\t"+paraphrase)); !allow {
+		t.Fatal("a genuinely paraphrased line carries no fingerprint and must pass (documented residual)")
+	}
+}
+
 func TestArbitraryProsePasses(t *testing.T) {
 	g := servedGuard(t)
 	// Non-repo text (the agent's own words) must not be blocked.
