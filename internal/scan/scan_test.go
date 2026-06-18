@@ -218,6 +218,48 @@ func TestLoadConfigBothFormats(t *testing.T) {
 	}
 }
 
+// TestLoadConfigProjectScoped pins the ~/.claude.json coverage fix: Claude Code keeps some MCP
+// servers at the top level and others under projects[path].mcpServers. Both must be scanned, and
+// a project-scoped server is labelled "<project>/<name>" so it is never silently skipped.
+func TestLoadConfigProjectScoped(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "claude.json")
+	cfg := `{
+		"mcpServers": {"top": {"command":"npx","args":["-y","top-server"]}},
+		"projects": {
+			"/home/u/proj-a": {"mcpServers": {"a": {"type":"http","url":"https://a.example.com/mcp"}}},
+			"/home/u/proj-b": {"mcpServers": {"b": {"command":"node","args":["b.js"]}}},
+			"/home/u/empty":  {"history": []}
+		}
+	}`
+	if err := os.WriteFile(p, []byte(cfg), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	c, err := LoadConfig(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]bool{}
+	for _, s := range c.Servers {
+		got[s.Name] = true
+		if !s.fromLaunch {
+			t.Errorf("server %q should be fromLaunch", s.Name)
+		}
+	}
+	if len(c.Servers) != 3 {
+		t.Fatalf("want 3 servers (1 top + 2 project-scoped, empty project skipped), got %d: %+v", len(c.Servers), c.Servers)
+	}
+	for _, want := range []string{"top", "proj-a/a", "proj-b/b"} {
+		if !got[want] {
+			t.Errorf("missing server %q; got %v", want, got)
+		}
+	}
+	// The project-scoped http server must surface as remote, proving it was actually scanned.
+	if r := Scan(c, nil); r.count(Remote) != 1 {
+		t.Fatalf("project-scoped http server not scanned as remote; findings=%+v", r.Findings)
+	}
+}
+
 // TestScanFlagsHTTPRemote pins the http/sse handling: a remote MCP server (a URL, no local
 // command) is reported as "remote", not "unbrokered" - the in-path stdio broker physically
 // cannot sit in front of a URL, so recommending it be brokered would be wrong.

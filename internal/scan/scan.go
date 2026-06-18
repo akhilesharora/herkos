@@ -223,6 +223,11 @@ func (r Report) String() string {
 // LoadConfig reads and parses an MCP configuration from a JSON file at path. It accepts both
 // the real launch config ({"mcpServers":{...}}) and the security manifest ({"servers":[...]});
 // a launch config takes precedence if both keys are present.
+//
+// Claude Code's ~/.claude.json keeps servers in two places: a top-level "mcpServers" and a
+// per-project "projects"[path]."mcpServers". Both are scanned, so a project-scoped server is
+// never silently skipped; project-scoped servers are labelled "<project>/<name>" so they stay
+// distinct from a top-level server of the same name.
 func LoadConfig(path string) (Config, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -231,12 +236,40 @@ func LoadConfig(path string) (Config, error) {
 	var probe struct {
 		Servers    json.RawMessage `json:"servers"`
 		MCPServers json.RawMessage `json:"mcpServers"`
+		Projects   map[string]struct {
+			MCPServers json.RawMessage `json:"mcpServers"`
+		} `json:"projects"`
 	}
 	if err := json.Unmarshal(raw, &probe); err != nil {
 		return Config{}, fmt.Errorf("scan: parse config: %w", err)
 	}
-	if len(probe.MCPServers) > 0 {
-		return launchConfig(probe.MCPServers)
+	projectServers := false
+	for _, p := range probe.Projects {
+		if len(p.MCPServers) > 0 {
+			projectServers = true
+			break
+		}
+	}
+	if len(probe.MCPServers) > 0 || projectServers {
+		cfg := Config{}
+		top, err := parseServers(probe.MCPServers, "")
+		if err != nil {
+			return Config{}, err
+		}
+		cfg.Servers = append(cfg.Servers, top...)
+		paths := make([]string, 0, len(probe.Projects))
+		for p := range probe.Projects {
+			paths = append(paths, p)
+		}
+		sort.Strings(paths)
+		for _, p := range paths {
+			servers, err := parseServers(probe.Projects[p].MCPServers, filepath.Base(p))
+			if err != nil {
+				return Config{}, err
+			}
+			cfg.Servers = append(cfg.Servers, servers...)
+		}
+		return cfg, nil
 	}
 	var cfg Config
 	if err := json.Unmarshal(raw, &cfg); err != nil {
@@ -245,9 +278,13 @@ func LoadConfig(path string) (Config, error) {
 	return cfg, nil
 }
 
-// launchConfig parses the {"mcpServers":{name:{command,args}}} shape into Servers, in a
-// deterministic (name-sorted) order.
-func launchConfig(raw json.RawMessage) (Config, error) {
+// parseServers parses a {"name":{command,args,type,url}} mcpServers block into Servers in a
+// deterministic (name-sorted) order. A non-empty scope (the owning project) is prefixed as
+// "<scope>/<name>"; an empty raw block yields no servers.
+func parseServers(raw json.RawMessage, scope string) ([]Server, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
 	var m map[string]struct {
 		Command string   `json:"command"`
 		Args    []string `json:"args"`
@@ -255,16 +292,20 @@ func launchConfig(raw json.RawMessage) (Config, error) {
 		URL     string   `json:"url"`
 	}
 	if err := json.Unmarshal(raw, &m); err != nil {
-		return Config{}, fmt.Errorf("scan: parse mcpServers: %w", err)
+		return nil, fmt.Errorf("scan: parse mcpServers: %w", err)
 	}
 	names := make([]string, 0, len(m))
 	for name := range m {
 		names = append(names, name)
 	}
 	sort.Strings(names)
-	cfg := Config{}
+	out := make([]Server, 0, len(names))
 	for _, name := range names {
-		cfg.Servers = append(cfg.Servers, Server{Name: name, Command: m[name].Command, Args: m[name].Args, Type: m[name].Type, URL: m[name].URL, fromLaunch: true})
+		display := name
+		if scope != "" {
+			display = scope + "/" + name
+		}
+		out = append(out, Server{Name: display, Command: m[name].Command, Args: m[name].Args, Type: m[name].Type, URL: m[name].URL, fromLaunch: true})
 	}
-	return cfg, nil
+	return out, nil
 }
