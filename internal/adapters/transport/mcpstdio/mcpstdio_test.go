@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -27,7 +26,6 @@ func TestFramerRoundTrip(t *testing.T) {
 			[]byte(`{"id":2,"params":{"x":1}}`),
 			[]byte(`{"id":3}`),
 		}},
-		{"empty body", [][]byte{{}}},
 		{"utf8 body", [][]byte{[]byte(`{"text":"héllo-世界"}`)}},
 	}
 	for _, c := range cases {
@@ -52,12 +50,34 @@ func TestFramerRoundTrip(t *testing.T) {
 	}
 }
 
-// TestFramerHeaderCaseInsensitive checks that a lowercase header name and an
-// ignored sibling header still parse, since servers vary on capitalization.
-func TestFramerHeaderCaseInsensitive(t *testing.T) {
+// TestFramerBackToBack checks that two messages written without any gap are each
+// read back whole, with no bytes from the second leaking into the first.
+func TestFramerBackToBack(t *testing.T) {
+	first := []byte(`{"id":1,"method":"a"}`)
+	second := []byte(`{"id":2,"method":"b"}`)
+	f := NewFramer(strings.NewReader(string(first)+"\n"+string(second)+"\n"), io.Discard)
+
+	got1, err := f.ReadMessage()
+	if err != nil {
+		t.Fatalf("ReadMessage[0]: %v", err)
+	}
+	if !bytes.Equal(got1, first) {
+		t.Fatalf("ReadMessage[0]=%q want %q", got1, first)
+	}
+	got2, err := f.ReadMessage()
+	if err != nil {
+		t.Fatalf("ReadMessage[1]: %v", err)
+	}
+	if !bytes.Equal(got2, second) {
+		t.Fatalf("ReadMessage[1]=%q want %q", got2, second)
+	}
+}
+
+// TestFramerCRLFTerminated verifies a line ending in CRLF is returned without the
+// trailing carriage return, since some peers emit \r\n line endings.
+func TestFramerCRLFTerminated(t *testing.T) {
 	body := []byte(`{"ok":true}`)
-	raw := fmt.Sprintf("content-length: %d\r\nContent-Type: application/json\r\n\r\n%s", len(body), body)
-	f := NewFramer(strings.NewReader(raw), io.Discard)
+	f := NewFramer(strings.NewReader(string(body)+"\r\n"), io.Discard)
 	got, err := f.ReadMessage()
 	if err != nil {
 		t.Fatalf("ReadMessage: %v", err)
@@ -67,30 +87,70 @@ func TestFramerHeaderCaseInsensitive(t *testing.T) {
 	}
 }
 
-func TestFramerReadMalformed(t *testing.T) {
-	cases := []struct {
-		name string
-		raw  string
-	}{
-		{"missing content-length", "Content-Type: application/json\r\n\r\n{}"},
-		{"non-numeric length", "Content-Length: abc\r\n\r\n{}"},
-		{"negative length", "Content-Length: -1\r\n\r\n{}"},
-		{"header without colon", "Content-Length 5\r\n\r\nhello"},
-		{"length over cap", fmt.Sprintf("Content-Length: %d\r\n\r\n", MaxMessageBytes+1)},
+// TestFramerSkipsBlankLines checks that a blank line between two messages is
+// skipped rather than returned as an empty message.
+func TestFramerSkipsBlankLines(t *testing.T) {
+	first := []byte(`{"id":1}`)
+	second := []byte(`{"id":2}`)
+	// Blank lines around and between the two messages, including a bare CRLF.
+	raw := "\n" + string(first) + "\n\n" + "\r\n" + string(second) + "\n"
+	f := NewFramer(strings.NewReader(raw), io.Discard)
+
+	got1, err := f.ReadMessage()
+	if err != nil {
+		t.Fatalf("ReadMessage[0]: %v", err)
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			f := NewFramer(strings.NewReader(c.raw), io.Discard)
-			_, err := f.ReadMessage()
-			if !errors.Is(err, ErrMalformedFrame) {
-				t.Fatalf("err=%v want ErrMalformedFrame", err)
-			}
-		})
+	if !bytes.Equal(got1, first) {
+		t.Fatalf("ReadMessage[0]=%q want %q", got1, first)
+	}
+	got2, err := f.ReadMessage()
+	if err != nil {
+		t.Fatalf("ReadMessage[1]: %v", err)
+	}
+	if !bytes.Equal(got2, second) {
+		t.Fatalf("ReadMessage[1]=%q want %q", got2, second)
 	}
 }
 
-// TestFramerCleanEOF distinguishes a closed stream from a malformed frame: an
-// EOF before any header byte must surface as io.EOF, not ErrMalformedFrame.
+// neverNewlineReader yields infinitely many non-newline bytes so ReadMessage can
+// never find a frame terminator. It lets the cap be exercised without allocating
+// a MaxMessageBytes-sized literal in the test.
+type neverNewlineReader struct{}
+
+func (neverNewlineReader) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = 'a'
+	}
+	return len(p), nil
+}
+
+// TestFramerReadOverCap checks that a line that never terminates is rejected with
+// ErrMalformedFrame once it exceeds MaxMessageBytes, instead of allocating without
+// bound.
+func TestFramerReadOverCap(t *testing.T) {
+	f := NewFramer(neverNewlineReader{}, io.Discard)
+	_, err := f.ReadMessage()
+	if !errors.Is(err, ErrMalformedFrame) {
+		t.Fatalf("err=%v want ErrMalformedFrame", err)
+	}
+}
+
+// TestFramerWriteEmbeddedNewline checks that a body carrying an embedded newline
+// is refused: the spec forbids it and writing it would inject a frame boundary.
+func TestFramerWriteEmbeddedNewline(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewFramer(strings.NewReader(""), &buf)
+	err := f.WriteMessage([]byte("{\"a\":1}\n{\"b\":2}"))
+	if !errors.Is(err, ErrMalformedFrame) {
+		t.Fatalf("err=%v want ErrMalformedFrame", err)
+	}
+	if buf.Len() != 0 {
+		t.Fatalf("rejected write must not emit bytes; buffer has %d", buf.Len())
+	}
+}
+
+// TestFramerCleanEOF distinguishes a closed stream from a malformed frame: an EOF
+// before any byte is read must surface as io.EOF.
 func TestFramerCleanEOF(t *testing.T) {
 	f := NewFramer(strings.NewReader(""), io.Discard)
 	if _, err := f.ReadMessage(); !errors.Is(err, io.EOF) {
@@ -98,16 +158,21 @@ func TestFramerCleanEOF(t *testing.T) {
 	}
 }
 
-// TestFramerTruncatedBody verifies that a body shorter than the declared length
-// fails rather than returning partial bytes.
-func TestFramerTruncatedBody(t *testing.T) {
-	f := NewFramer(strings.NewReader("Content-Length: 10\r\n\r\nshort"), io.Discard)
-	_, err := f.ReadMessage()
-	if err == nil {
-		t.Fatal("want error on truncated body, got nil")
+// TestFramerUnterminatedFinalLine verifies that a non-empty final line with no
+// trailing newline is returned, and the following read reports io.EOF.
+func TestFramerUnterminatedFinalLine(t *testing.T) {
+	body := []byte(`{"id":1}`)
+	f := NewFramer(strings.NewReader(string(body)), io.Discard)
+
+	got, err := f.ReadMessage()
+	if err != nil {
+		t.Fatalf("ReadMessage: %v", err)
 	}
-	if errors.Is(err, ErrMalformedFrame) {
-		t.Fatalf("truncated body should not be ErrMalformedFrame, got %v", err)
+	if !bytes.Equal(got, body) {
+		t.Fatalf("ReadMessage=%q want %q", got, body)
+	}
+	if _, err := f.ReadMessage(); !errors.Is(err, io.EOF) {
+		t.Fatalf("err=%v want io.EOF", err)
 	}
 }
 

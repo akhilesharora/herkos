@@ -1,45 +1,42 @@
 // Package mcpstdio is a stdio transport adapter that carries MCP/JSON-RPC
-// messages using LSP-style Content-Length framing.
+// messages using the MCP newline-delimited framing.
 //
-// The wire format is a header block terminated by a blank line followed by an
-// exact-length body:
+// The wire format is one message per line: the raw JSON body followed by a
+// single '\n'. Messages MUST NOT contain an embedded newline, so each line is
+// exactly one message:
 //
-//	Content-Length: <N>\r\n
-//	\r\n
-//	<N bytes of JSON>
+//	<JSON>\n
+//	<JSON>\n
 //
-// Reading is fail-closed: a missing or malformed length, or a length over the
-// cap, is an error rather than a best-effort parse. This adapter is pure
-// plumbing - it frames and forwards bytes and never inspects or authorizes the
-// payload.
+// Reading is fail-closed: a line that grows past the cap without a terminator,
+// or a body carrying an embedded newline on write, is an error rather than a
+// best-effort parse. This adapter is pure plumbing - it frames and forwards
+// bytes and never inspects or authorizes the payload.
 package mcpstdio
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 
 	"github.com/akhilesharora/herkos/internal/ports"
 )
 
-// MaxMessageBytes caps the body size a single frame may declare. A frame whose
-// Content-Length exceeds this is rejected before any body bytes are read, so a
-// hostile or corrupt header cannot drive an unbounded allocation.
+// MaxMessageBytes caps the size a single line may reach before a terminating
+// newline is seen. A peer that never sends '\n' is rejected once the accumulated
+// line passes this, so a hostile or corrupt stream cannot drive an unbounded
+// allocation.
 const MaxMessageBytes = 32 << 20 // 32 MiB
 
-// contentLengthHeader is the only header Framer interprets; matched case-insensitively.
-const contentLengthHeader = "content-length"
-
-// ErrMalformedFrame is returned when a frame's header block is missing the
-// Content-Length, carries a non-numeric or negative length, or declares a
-// length over [MaxMessageBytes].
+// ErrMalformedFrame is returned when a line exceeds [MaxMessageBytes] without a
+// terminating newline, or when a message handed to WriteMessage carries an
+// embedded newline that would inject a frame boundary.
 var ErrMalformedFrame = errors.New("mcpstdio: malformed frame")
 
-// Framer reads and writes Content-Length-framed JSON-RPC messages over an
+// Framer reads and writes newline-delimited JSON-RPC messages over an
 // io.Reader / io.Writer pair. It is not safe for concurrent use on the same
 // direction; serialize calls to WriteMessage and serialize calls to ReadMessage.
 type Framer struct {
@@ -52,80 +49,79 @@ func NewFramer(r io.Reader, w io.Writer) *Framer {
 	return &Framer{r: bufio.NewReader(r), w: w}
 }
 
-// WriteMessage frames b as "Content-Length: N\r\n\r\n" followed by the raw body
-// bytes and writes the whole frame to the underlying writer. b is sent verbatim;
-// WriteMessage does not validate that it is JSON.
+// WriteMessage writes b followed by a single '\n'. b is sent verbatim;
+// WriteMessage does not validate that it is JSON. Because the framing is
+// newline-delimited, a b that itself contains a '\n' is rejected with
+// [ErrMalformedFrame] and nothing is written, rather than splitting into two
+// frames on the wire.
 func (f *Framer) WriteMessage(b []byte) error {
-	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(b))
-	if _, err := io.WriteString(f.w, header); err != nil {
-		return fmt.Errorf("mcpstdio: write header: %w", err)
+	if bytes.IndexByte(b, '\n') >= 0 {
+		return fmt.Errorf("%w: message contains an embedded newline", ErrMalformedFrame)
 	}
 	if _, err := f.w.Write(b); err != nil {
 		return fmt.Errorf("mcpstdio: write body: %w", err)
 	}
+	if _, err := io.WriteString(f.w, "\n"); err != nil {
+		return fmt.Errorf("mcpstdio: write terminator: %w", err)
+	}
 	return nil
 }
 
-// ReadMessage reads one frame: it parses the header block, validates the
-// Content-Length, then reads exactly that many body bytes and returns them. A
-// malformed or oversized length returns [ErrMalformedFrame] without consuming a
-// body. A truncated body (EOF before N bytes) returns the underlying read error.
+// ReadMessage reads bytes up to the next '\n' and returns the line as one
+// message. A single trailing '\r' is trimmed so '\r\n'-terminated peers parse.
+// Blank lines (empty after trimming) are skipped. A line that grows past
+// [MaxMessageBytes] without a terminator returns [ErrMalformedFrame]. A clean
+// EOF before any byte returns [io.EOF]; an EOF after a non-empty unterminated
+// line returns that line, and the next call returns [io.EOF].
 func (f *Framer) ReadMessage() ([]byte, error) {
-	n, err := f.readContentLength()
-	if err != nil {
-		return nil, err
+	for {
+		line, err := f.readLine()
+		if err != nil {
+			return nil, err
+		}
+		if len(line) == 0 {
+			// Blank line: not a message, keep reading.
+			continue
+		}
+		return line, nil
 	}
-	body := make([]byte, n)
-	if _, err := io.ReadFull(f.r, body); err != nil {
-		return nil, fmt.Errorf("mcpstdio: read body: %w", err)
-	}
-	return body, nil
 }
 
-// readContentLength consumes the header block up to and including the blank
-// separator line and returns the validated body length. It fails closed on a
-// missing, duplicate-but-conflicting, non-numeric, negative, or oversized length.
-func (f *Framer) readContentLength() (int, error) {
-	length := -1
+// readLine accumulates bytes up to and not including the next '\n', enforcing the
+// [MaxMessageBytes] cap, and trims a single trailing '\r'. A clean EOF before any
+// byte returns [io.EOF]; an EOF after some bytes returns the bytes read so far
+// (so an unterminated final line is delivered before the stream-closed signal).
+func (f *Framer) readLine() ([]byte, error) {
+	var line []byte
 	for {
-		line, err := f.r.ReadString('\n')
+		c, err := f.r.ReadByte()
 		if err != nil {
-			// EOF mid-header (or with no header at all) is a malformed frame,
-			// except a clean EOF before any byte, which we surface as io.EOF so
-			// callers can distinguish "stream closed" from "bad frame".
-			if errors.Is(err, io.EOF) && line == "" && length < 0 {
-				return 0, io.EOF
+			if errors.Is(err, io.EOF) && len(line) == 0 {
+				return nil, io.EOF
 			}
-			return 0, fmt.Errorf("mcpstdio: read header: %w", err)
-		}
-		// A header line ends in CRLF; the separator is a bare CRLF (or LF).
-		trimmed := strings.TrimRight(line, "\r\n")
-		if trimmed == "" {
-			// Blank line: end of header block.
-			if length < 0 {
-				return 0, fmt.Errorf("%w: missing Content-Length", ErrMalformedFrame)
+			if errors.Is(err, io.EOF) {
+				return trimCR(line), nil
 			}
-			return length, nil
+			return nil, fmt.Errorf("mcpstdio: read: %w", err)
 		}
-		name, value, ok := strings.Cut(trimmed, ":")
-		if !ok {
-			return 0, fmt.Errorf("%w: header line without colon: %q", ErrMalformedFrame, trimmed)
+		if c == '\n' {
+			return trimCR(line), nil
 		}
-		if !strings.EqualFold(strings.TrimSpace(name), contentLengthHeader) {
-			continue // ignore unknown headers, e.g. Content-Type
+		if len(line) >= MaxMessageBytes {
+			return nil, fmt.Errorf("%w: line over cap %d with no newline", ErrMalformedFrame, MaxMessageBytes)
 		}
-		v, perr := strconv.Atoi(strings.TrimSpace(value))
-		if perr != nil {
-			return 0, fmt.Errorf("%w: non-numeric Content-Length %q", ErrMalformedFrame, strings.TrimSpace(value))
-		}
-		if v < 0 {
-			return 0, fmt.Errorf("%w: negative Content-Length %d", ErrMalformedFrame, v)
-		}
-		if v > MaxMessageBytes {
-			return 0, fmt.Errorf("%w: Content-Length %d over cap %d", ErrMalformedFrame, v, MaxMessageBytes)
-		}
-		length = v
+		line = append(line, c)
 	}
+}
+
+// trimCR drops a single trailing '\r' so a '\r\n'-terminated line yields just the
+// body. A bare '\r' with no following '\n' is left in place; only the terminator
+// pairing is normalized.
+func trimCR(line []byte) []byte {
+	if n := len(line); n > 0 && line[n-1] == '\r' {
+		return line[:n-1]
+	}
+	return line
 }
 
 // Transport adapts a [Framer] to [ports.TransportPort], carrying framed MCP
