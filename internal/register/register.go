@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"sort"
 )
 
 // serverName is the key under mcpServers that identifies Herkos's broker.
@@ -97,21 +98,31 @@ func Wrap(configPath, name string, allow []string) error {
 	if !ok {
 		return fmt.Errorf("register: server %q is %T, want an object", name, raw)
 	}
-	cmd, cmdArgs, err := upstreamOf(entry)
+	wrapped, err := wrapEntry(entry, allow)
 	if err != nil {
 		return err
 	}
+	servers[name] = wrapped
+	root[mcpServersKey] = servers
+	return save(configPath, root)
+}
 
+// wrapEntry rewrites one server entry so its upstream runs through `herkos serve` with the
+// given allowlist. It unwraps a prior herkos wrap first (so re-wrapping is idempotent) and
+// preserves any extra fields (e.g. "env") - the herkos process inherits them and the child
+// upstream inherits from herkos, so dropping them would break a server that needs its
+// environment.
+func wrapEntry(entry map[string]any, allow []string) (map[string]any, error) {
+	cmd, cmdArgs, err := upstreamOf(entry)
+	if err != nil {
+		return nil, err
+	}
 	serveArgs := make([]string, 0, len(allow)*2+2+len(cmdArgs))
 	for _, t := range allow {
 		serveArgs = append(serveArgs, "--allow-tool", t)
 	}
 	serveArgs = append(serveArgs, "--", cmd)
 	serveArgs = append(serveArgs, cmdArgs...)
-
-	// Preserve any extra fields on the original entry (e.g. "env"): the herkos process
-	// inherits them and the child upstream inherits from herkos, so dropping them would
-	// break a server that needs its environment.
 	wrapped := herkosEntry(serveArgs)
 	for k, v := range entry {
 		if k == "command" || k == "args" {
@@ -119,9 +130,91 @@ func Wrap(configPath, name string, allow []string) error {
 		}
 		wrapped[k] = v
 	}
-	servers[name] = wrapped
-	root[mcpServersKey] = servers
-	return save(configPath, root)
+	return wrapped, nil
+}
+
+// Discoverer returns the tool names a server currently exposes. [WrapAll] uses it to pin each
+// wrapped server's allowlist to the tools present today, so a tool added later (the backdoored-
+// update vector) is denied by default rather than silently callable.
+type Discoverer func(command string, args []string) ([]string, error)
+
+// WrapResult records what [WrapAll] did with one server: it was Wrapped (with the Tools that
+// were pinned as its allowlist), or it was left alone for the reason in Skip.
+type WrapResult struct {
+	Name    string
+	Wrapped bool
+	Tools   []string
+	Skip    string
+}
+
+// WrapAll brokers every local stdio server in the config in place, pinning each to the tools it
+// currently exposes (discovered via discover). It deliberately leaves some servers alone, each
+// with a reason in WrapResult.Skip: a remote server (a URL with no local command - an stdio
+// broker cannot sit in front of it), an already-brokered server, and any server whose tools
+// cannot be discovered (wrapping it with an empty allowlist would deny every tool and break it).
+// The config is written once, and only if at least one server was wrapped, so a run that wraps
+// nothing leaves the file (and its backup) untouched.
+func WrapAll(configPath string, discover Discoverer) ([]WrapResult, error) {
+	root, err := load(configPath)
+	if err != nil {
+		return nil, err
+	}
+	servers, err := serversMap(root)
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, 0, len(servers))
+	for name := range servers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	results := make([]WrapResult, 0, len(names))
+	wrappedAny := false
+	for _, name := range names {
+		entry, ok := servers[name].(map[string]any)
+		if !ok {
+			results = append(results, WrapResult{Name: name, Skip: "entry is not an object"})
+			continue
+		}
+		if isHerkosWrapped(entry) {
+			results = append(results, WrapResult{Name: name, Skip: "already brokered"})
+			continue
+		}
+		if cmd, _ := entry["command"].(string); cmd == "" {
+			results = append(results, WrapResult{Name: name, Skip: "remote server (a URL, no local command); the stdio broker cannot mediate it"})
+			continue
+		}
+		cmd, args, err := upstreamOf(entry)
+		if err != nil {
+			results = append(results, WrapResult{Name: name, Skip: err.Error()})
+			continue
+		}
+		tools, err := discover(cmd, args)
+		if err != nil {
+			results = append(results, WrapResult{Name: name, Skip: "could not discover tools: " + err.Error()})
+			continue
+		}
+		if len(tools) == 0 {
+			results = append(results, WrapResult{Name: name, Skip: "server advertised no tools"})
+			continue
+		}
+		wrapped, err := wrapEntry(entry, tools)
+		if err != nil {
+			results = append(results, WrapResult{Name: name, Skip: err.Error()})
+			continue
+		}
+		servers[name] = wrapped
+		wrappedAny = true
+		results = append(results, WrapResult{Name: name, Wrapped: true, Tools: tools})
+	}
+	if wrappedAny {
+		root[mcpServersKey] = servers
+		if err := save(configPath, root); err != nil {
+			return results, err
+		}
+	}
+	return results, nil
 }
 
 // isHerkosWrapped reports whether a server entry is one Herkos produced: command "herkos"

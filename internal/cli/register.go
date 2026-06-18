@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/akhilesharora/herkos/internal/register"
 )
@@ -28,6 +29,7 @@ func registerCmd(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(io.Discard)
 	cfgPath := fs.String("config", "", "path to the MCP config JSON to modify")
 	server := fs.String("server", "", "wrap an existing server by name, in place (no direct bypass left)")
+	all := fs.Bool("all", false, "broker every local stdio server in the config in place, pinning each to the tools it exposes now")
 	var allow stringList
 	fs.Var(&allow, "allow-tool", "tool the agent may call upstream (repeatable)")
 	if err := fs.Parse(args); err != nil {
@@ -37,6 +39,10 @@ func registerCmd(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "register: -config is required")
 		return 2
 	}
+	if *all && (*server != "" || len(fs.Args()) > 0) {
+		fmt.Fprintln(stderr, "register: --all cannot be combined with --server or an upstream command")
+		return 2
+	}
 	// A backup is only written when the config already exists, so report accurately:
 	// claim a .bak only when there was a prior file to preserve.
 	_, statErr := os.Stat(*cfgPath)
@@ -44,6 +50,28 @@ func registerCmd(args []string, stdout, stderr io.Writer) int {
 	bak := ""
 	if existed {
 		bak = fmt.Sprintf(" (backup at %s.bak)", *cfgPath)
+	}
+
+	// Auto-wrap mode: broker every local stdio server in one pass, pinning each to its current
+	// tools. This is the one-command adoption path - point an agent's whole config through the
+	// broker without hand-editing each launch line.
+	if *all {
+		results, err := register.WrapAll(*cfgPath, register.DiscoverTools)
+		if err != nil {
+			fmt.Fprintf(stderr, "register: %v\n", err)
+			return 1
+		}
+		wrapped := 0
+		for _, r := range results {
+			if r.Wrapped {
+				wrapped++
+				fmt.Fprintf(stdout, "wrapped %q through herkos (pinned %d tool(s): %s)\n", r.Name, len(r.Tools), strings.Join(r.Tools, ", "))
+			} else {
+				fmt.Fprintf(stderr, "skipped %q: %s\n", r.Name, r.Skip)
+			}
+		}
+		fmt.Fprintf(stdout, "register --all: wrapped %d server(s) in %s%s\n", wrapped, *cfgPath, bak)
+		return 0
 	}
 
 	// Wrap mode: rewrite an existing named server in place. No direct path to it is left.

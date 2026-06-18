@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -270,5 +271,49 @@ func TestWrapUnknownServerErrors(t *testing.T) {
 	path := seed(t, sampleConfig)
 	if err := Wrap(path, "nope", []string{"read_file"}); err == nil {
 		t.Fatal("Wrap on a server that is not in the config must error")
+	}
+}
+
+func TestWrapAll(t *testing.T) {
+	path := seed(t, `{"mcpServers":{
+		"local":   {"command":"npx","args":["-y","srv","--flag"]},
+		"remote":  {"type":"http","url":"https://api.example.com/mcp"},
+		"already": {"command":"herkos","args":["serve","--allow-tool","x","--","node","s.js"]}
+	}}`)
+	// Stub discoverer: the local server "exposes" two tools; no real process is launched.
+	discover := func(command string, args []string) ([]string, error) {
+		if command != "npx" {
+			t.Errorf("discover called with unexpected upstream %q %v", command, args)
+		}
+		return []string{"read", "write"}, nil
+	}
+	results, err := WrapAll(path, discover)
+	if err != nil {
+		t.Fatalf("WrapAll: %v", err)
+	}
+	byName := map[string]WrapResult{}
+	for _, r := range results {
+		byName[r.Name] = r
+	}
+	if !byName["local"].Wrapped || !reflect.DeepEqual(byName["local"].Tools, []string{"read", "write"}) {
+		t.Fatalf("local must be wrapped with the discovered tools: %+v", byName["local"])
+	}
+	if byName["remote"].Wrapped || !strings.Contains(byName["remote"].Skip, "remote") {
+		t.Fatalf("remote must be skipped as remote: %+v", byName["remote"])
+	}
+	if byName["already"].Wrapped || !strings.Contains(byName["already"].Skip, "already") {
+		t.Fatalf("already-brokered must be skipped: %+v", byName["already"])
+	}
+	// The written config must broker local through herkos with the pinned (discovered) allowlist.
+	local, ok := servers(t, readConfig(t, path))["local"].(map[string]any)
+	if !ok {
+		t.Fatal("local entry missing after WrapAll")
+	}
+	want := map[string]any{
+		"command": "herkos",
+		"args":    []any{"serve", "--allow-tool", "read", "--allow-tool", "write", "--", "npx", "-y", "srv", "--flag"},
+	}
+	if !reflect.DeepEqual(local, want) {
+		t.Fatalf("wrapped local = %#v, want %#v", local, want)
 	}
 }
