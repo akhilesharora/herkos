@@ -26,8 +26,13 @@ import (
 // serverName is the key under mcpServers that identifies Herkos's broker.
 const serverName = "herkos"
 
-// mcpServersKey is the top-level field holding the name -> launch-spec map.
-const mcpServersKey = "mcpServers"
+// mcpServersKey and serversKey are the two top-level fields under which an MCP config stores
+// the name -> launch-spec map: most configs use "mcpServers", some use a "servers" object
+// instead. The code keys off the config shape, not off any particular client.
+const (
+	mcpServersKey = "mcpServers"
+	serversKey    = "servers"
+)
 
 // backupSuffix is appended to the config path to name the pre-write backup.
 const backupSuffix = ".bak"
@@ -330,17 +335,17 @@ func load(configPath string) (map[string]any, error) {
 	return root, nil
 }
 
-// serversMap returns the mutable server map from root and the top-level key it lives under:
-// "mcpServers" (Claude Code, Cursor, Cline, Windsurf) or "servers" (VS Code, GitHub Copilot).
-// It prefers mcpServers when both exist, falls back to a "servers" object, and defaults to
-// mcpServers for a new or empty config so first-time registration writes the common key. A
-// present-but-non-object value is an error rather than something to silently overwrite.
+// serversMap returns the mutable server map from root and the top-level key it lives under,
+// either "mcpServers" or a "servers" object - whichever shape the config uses. It prefers
+// mcpServers when both exist, falls back to a "servers" object, and defaults to mcpServers for
+// a new or empty config so first-time registration writes the common key. A present-but-non-
+// object value is an error rather than something to silently overwrite.
 func serversMap(root map[string]any) (map[string]any, string, error) {
 	key := mcpServersKey
 	if _, ok := root[mcpServersKey]; !ok {
-		if v, ok := root["servers"]; ok {
+		if v, ok := root[serversKey]; ok {
 			if _, isObject := v.(map[string]any); isObject {
-				key = "servers"
+				key = serversKey
 			}
 		}
 	}

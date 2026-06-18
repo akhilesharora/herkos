@@ -271,9 +271,9 @@ func LoadConfig(path string) (Config, error) {
 		}
 		return cfg, nil
 	}
-	// VS Code and GitHub Copilot put the same launch config under a "servers" OBJECT (note the
-	// key) instead of "mcpServers". A "servers" object is a launch config; a "servers" array is
-	// the security manifest handled below.
+	// Some configs put the same launch config under a "servers" OBJECT (note the key) instead of
+	// "mcpServers". A "servers" object is a launch config; a "servers" array is the security
+	// manifest handled below.
 	if isJSONObject(probe.Servers) {
 		servers, err := parseServers(probe.Servers, "")
 		if err != nil {
@@ -288,8 +288,8 @@ func LoadConfig(path string) (Config, error) {
 	return cfg, nil
 }
 
-// isJSONObject reports whether raw is a JSON object (starts with '{'), distinguishing a VS Code
-// or GitHub Copilot "servers" launch-config object from a security-manifest "servers" array.
+// isJSONObject reports whether raw is a JSON object (starts with '{'), distinguishing a
+// "servers" launch-config object from a security-manifest "servers" array.
 func isJSONObject(raw json.RawMessage) bool {
 	for _, b := range raw {
 		switch b {
