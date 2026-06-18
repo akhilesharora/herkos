@@ -1,6 +1,6 @@
 # Herkos
 
-[![ci](https://github.com/akhilesharora/herkos/actions/workflows/ci.yml/badge.svg)](https://github.com/akhilesharora/herkos/actions/workflows/ci.yml) · [Live site](https://akhilesharora.github.io/herkos/) · Apache-2.0
+[![ci](https://github.com/akhilesharora/herkos/actions/workflows/ci.yml/badge.svg)](https://github.com/akhilesharora/herkos/actions/workflows/ci.yml) · [![codecov](https://codecov.io/gh/akhilesharora/herkos/graph/badge.svg)](https://codecov.io/gh/akhilesharora/herkos) · [![Go Report Card](https://goreportcard.com/badge/github.com/akhilesharora/herkos)](https://goreportcard.com/report/github.com/akhilesharora/herkos) · [Live site](https://akhilesharora.github.io/herkos/) · Apache-2.0
 
 A local-first, pure-Go in-path MCP egress broker. Herkos sits between an AI agent and the MCP servers it calls, gates which tool calls reach upstream on the wire, and writes a signed, offline-verifiable audit log of every brokered call. It is built around **SpanGate**: the minimal code context an agent needs to answer a query is exactly the set it should be allowed to send back out. It is a working utility you can read, run, and verify.
 
@@ -92,11 +92,11 @@ make build         # go build ./...
 make race          # go test ./... -race
 make lint          # golangci-lint run
 make check         # build + vet + race + lint
-make verify-clean  # build+vet+race the COMMITTED tree (HEAD) from a throwaway worktree
+make verify-clean  # build + vet + race the committed code, not the working tree
 ```
 
 ## Write-up
-The honest account of what I built, why prevention is not achievable, and where it stands against the field is in [WRITEUP.md](docs/WRITEUP.md).
+The honest account of why it was built, why prevention is not achievable, and where it does work is in [WRITEUP.md](docs/WRITEUP.md).
 
 ## License
 Apache-2.0.
