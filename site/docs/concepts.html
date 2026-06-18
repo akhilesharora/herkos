@@ -122,7 +122,7 @@
   bytes blocked from egress: <span class="c-num">256</span>  (enforcement=<span class="c-warn">userspace</span>)
   receipt: <span class="c-ok">VERIFIED</span>  root=<span class="c-hash">02659078080f474c9fac20c7a83aa070f95cda014e0b0ea0994d7dde477d3008</span></pre>
     </div>
-    <p>The Merkle root is deterministic over the canonicalized span set, so two runs that served the same spans produce the same root. Re-verify a saved receipt with <code>herkos receipt --file &lt;r.json&gt;</code>.</p>
+    <p>The Merkle root is deterministic over the canonicalized span set, so two runs that served the same spans produce the same root. <code>herkos receipt --file &lt;r.json&gt;</code> summarizes a saved receipt; to cryptographically re-check its signature and root, use <code>herkos verify --file &lt;r.json&gt; --pubkey &lt;key.pub&gt;</code>.</p>
 
     <h3 id="audit-log">The serve audit log: what the broker did</h3>
     <p>The span receipt proves what went in. The audit log proves what the broker let out. Run <code>herkos serve --receipts &lt;dir&gt;</code> and Herkos writes a per-session log with one record for every brokered <code>tools/call</code>: the tool name, a hash of the request, and whether it was allowed or denied. Each record is ed25519-signed and sha256 hash-chained to the one before it, so any edit, reorder, or dropped record breaks the chain. A reader verifies the whole log offline with only the public key.</p>

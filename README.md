@@ -30,8 +30,10 @@ The live broker (`herkos serve`) enforces that same set on the wire:
 The pure-Go SpanGate core (SELECT -> Binding -> canonicalize -> pool -> signed receipt, with
 the dual-use leak provably blocked), the tree-sitter parser (Go/TS/Python), the on-disk index,
 the CLI, and the live in-path MCP broker (`herkos serve`, MCP newline-framed and verified end
-to end against a real MCP server) all work and are tested under the race detector, fuzzed, and
-gated on a clean-checkout build.
+to end over real stdio framing against a subprocess) all work and are tested under the race
+detector, fuzzed, and gated on a clean-checkout build. The run against a third-party MCP server
+(`@modelcontextprotocol/server-everything`) is a manual repro, in the
+[reproduce-it-yourself](#reproduce-it-yourself) steps below, not in CI.
 
 Enforcement is described plainly, because a security tool that hides its gaps is worse than
 none:

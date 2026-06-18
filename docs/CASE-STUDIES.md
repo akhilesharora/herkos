@@ -30,8 +30,10 @@ request**. Invariant notes this is architectural, not a server bug to patch.
 - **Broker verdict - does NOT prevent.** `create_pull_request` is a tool the user
   legitimately allowed. A tool-name allowlist passes it. Prevention here needs
   content/provenance egress, which is the hard layer Herkos has not built.
-- **Receipt verdict - strong.** The receipt records that `create_pull_request` ran and
-  which source spans were in context, signed and timestamped. After the leak you can prove
+- **Receipt verdict - strong.** The audit log records that `create_pull_request` ran - the
+  tool, the method, a hash of the request, and the allow/deny decision - signed and
+  hash-chained, with the served-context fingerprint committed once at session open (the
+  per-span set itself is the separate Merkle span receipt). After the leak you can prove
   exactly what left and when. This is the realistic value: forensics, not a force field.
 
 **Honest overall:** prevention aspirational; audit real.
