@@ -1,17 +1,15 @@
-// Package register adds and removes Herkos's broker entry in a Claude Code
-// style MCP configuration file.
+// Package register adds, wraps, and removes Herkos's broker entry in an MCP configuration file.
 //
-// The config is JSON whose top-level "mcpServers" object maps a server name to
-// a launch spec of the form {"command": ..., "args": [...]}. Registering Herkos
-// means inserting mcpServers["herkos"] = {"command":"herkos","args":["serve", ...]}
-// (the caller's serve arguments follow "serve") so an agent host launches the
-// Herkos broker as one of its MCP servers.
+// The config is JSON whose top-level "mcpServers" object (or, in some configs, a "servers"
+// object) maps a server name to a launch spec of the form {"command": ..., "args": [...]}.
+// Registering Herkos means inserting an entry {"command":"herkos","args":["serve", ...]} (the
+// caller's serve arguments follow "serve") so an agent host launches the Herkos broker as one
+// of its MCP servers.
 //
-// The file is treated as an opaque JSON object: it is unmarshalled into a
-// generic map, only the mcpServers sub-map is touched, and everything else
-// (unknown top-level keys, other servers, formatting-independent content) is
-// preserved on round-trip. Both [Register] and [Unregister] are idempotent, and
-// [Register] writes a ".bak" copy of the prior file before overwriting it.
+// The file is treated as an opaque JSON object: it is unmarshalled into a generic map, only the
+// server map is touched, and everything else (unknown top-level keys, other servers,
+// formatting-independent content) is preserved on round-trip. Both [Register] and [Unregister]
+// are idempotent, and [Register] writes a ".bak" copy of the prior file before overwriting it.
 package register
 
 import (
@@ -186,8 +184,8 @@ func WrapAll(configPath string, discover Discoverer) ([]WrapResult, error) {
 			results = append(results, WrapResult{Name: name, Skip: "already brokered"})
 			continue
 		}
-		if cmd, _ := entry["command"].(string); cmd == "" {
-			results = append(results, WrapResult{Name: name, Skip: "remote server (a URL, no local command); the stdio broker cannot mediate it"})
+		if isRemoteEntry(entry) {
+			results = append(results, WrapResult{Name: name, Skip: "remote server (a URL, no local command); the in-path stdio broker cannot mediate it"})
 			continue
 		}
 		cmd, args, err := upstreamOf(entry)
@@ -230,6 +228,14 @@ func isHerkosWrapped(entry map[string]any) bool {
 	}
 	args, _ := entry["args"].([]any)
 	return len(args) > 0 && args[0] == "serve"
+}
+
+// isRemoteEntry reports whether a server entry is remote - reached over a URL with no local
+// command - which an in-path stdio broker cannot mediate. Mirrors scan's Server.isRemote for
+// the launch-config case.
+func isRemoteEntry(entry map[string]any) bool {
+	cmd, _ := entry["command"].(string)
+	return cmd == ""
 }
 
 // upstreamOf returns the real upstream command and args for a server entry, unwrapping a
@@ -325,12 +331,12 @@ func load(configPath string) (map[string]any, error) {
 		if errors.Is(err, fs.ErrNotExist) {
 			return map[string]any{}, nil
 		}
-		return nil, fmt.Errorf("read config %s: %w", configPath, err)
+		return nil, fmt.Errorf("register: read config %s: %w", configPath, err)
 	}
 
 	root := map[string]any{}
 	if err := json.Unmarshal(data, &root); err != nil {
-		return nil, fmt.Errorf("parse config %s: %w", configPath, err)
+		return nil, fmt.Errorf("register: parse config %s: %w", configPath, err)
 	}
 	return root, nil
 }
@@ -355,7 +361,7 @@ func serversMap(root map[string]any) (map[string]any, string, error) {
 	}
 	servers, ok := raw.(map[string]any)
 	if !ok {
-		return nil, key, fmt.Errorf("config field %q is %T, want object", key, raw)
+		return nil, key, fmt.Errorf("register: config field %q is %T, want object", key, raw)
 	}
 	return servers, key, nil
 }
@@ -371,12 +377,12 @@ func save(configPath string, root map[string]any) error {
 
 	out, err := json.MarshalIndent(root, "", "  ")
 	if err != nil {
-		return fmt.Errorf("encode config: %w", err)
+		return fmt.Errorf("register: encode config: %w", err)
 	}
 	out = append(out, '\n')
 
 	if err := os.WriteFile(configPath, out, configPerm); err != nil {
-		return fmt.Errorf("write config %s: %w", configPath, err)
+		return fmt.Errorf("register: write config %s: %w", configPath, err)
 	}
 	return nil
 }
@@ -390,12 +396,12 @@ func backup(configPath string) error {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
-		return fmt.Errorf("read config %s for backup: %w", configPath, err)
+		return fmt.Errorf("register: read config %s for backup: %w", configPath, err)
 	}
 
 	bakPath := configPath + backupSuffix
 	if err := os.WriteFile(bakPath, data, configPerm); err != nil {
-		return fmt.Errorf("write backup %s: %w", bakPath, err)
+		return fmt.Errorf("register: write backup %s: %w", bakPath, err)
 	}
 	return nil
 }

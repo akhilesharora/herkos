@@ -67,7 +67,7 @@ func DiscoverTools(command string, args []string) ([]string, error) {
 		} `json:"result"`
 	}
 	if err := json.Unmarshal(resp, &parsed); err != nil {
-		return nil, fmt.Errorf("parse tools/list: %w", err)
+		return nil, fmt.Errorf("register: parse tools/list: %w", err)
 	}
 	names := make([]string, 0, len(parsed.Result.Tools))
 	for _, t := range parsed.Result.Tools {
@@ -94,5 +94,5 @@ func readID(fr *mcpstdio.Framer, id int) ([]byte, error) {
 			return msg, nil
 		}
 	}
-	return nil, fmt.Errorf("no response with id %d", id)
+	return nil, fmt.Errorf("register: no response with id %d", id)
 }

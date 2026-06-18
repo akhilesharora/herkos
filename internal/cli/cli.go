@@ -85,7 +85,7 @@ func receiptCmd(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if *file == "" {
-		fmt.Fprintln(stderr, "receipt: -file is required")
+		fmt.Fprintln(stderr, "receipt: --file is required")
 		return 2
 	}
 	raw, err := os.ReadFile(*file)

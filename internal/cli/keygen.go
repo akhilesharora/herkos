@@ -13,7 +13,7 @@ import (
 func keygenCmd(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("keygen", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	path := fs.String("path", defaultKeyPath(), "signing key path")
+	path := fs.String("key", defaultKeyPath(), "signing key path")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}

@@ -7,7 +7,7 @@ import "fmt"
 type DenyReason string
 
 const (
-	ReasonInSpan           DenyReason = "within-span"
+	ReasonInSpan           DenyReason = "in-span"
 	ReasonDenyByDefault    DenyReason = "deny-by-default"
 	ReasonOutsideAllowlist DenyReason = "outside-allowlist"
 )

@@ -36,7 +36,7 @@ func registerCmd(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if *cfgPath == "" {
-		fmt.Fprintln(stderr, "register: -config is required")
+		fmt.Fprintln(stderr, "register: --config is required")
 		return 2
 	}
 	if *all && (*server != "" || len(fs.Args()) > 0) {

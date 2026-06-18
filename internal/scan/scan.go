@@ -1,10 +1,10 @@
 // Package scan inspects an MCP (Model Context Protocol) configuration and emits a shareable
 // security receipt. It accepts two shapes:
 //
-//   - a real MCP launch config, {"mcpServers": {name: {command, args, ...}}}, the form Claude
-//     Code (.mcp.json), Cursor (~/.cursor/mcp.json), and Cline use. On these it flags local
+//   - a launch config, {"mcpServers": {name: {command, args, ...}}} (or a top-level "servers"
+//     object of the same shape; e.g. Claude Code, Cursor, VS Code). On these it flags local
 //     stdio servers launched directly (not through the Herkos broker), unpinned npx
-//     auto-installs, and HTTP/SSE remotes the stdio broker cannot sit in front of.
+//     auto-installs, and HTTP/SSE remotes the in-path stdio broker cannot mediate.
 //   - a security manifest, {"servers": [{name, tools, allowsUnrestrictedEgress}]}, with
 //     declared tool metadata. On these it flags over-scoped servers, poisoned tool
 //     descriptions (against a trusted baseline), and unrestricted egress.
@@ -48,7 +48,7 @@ type Server struct {
 }
 
 // isRemote reports whether a launch entry is an HTTP/SSE remote: it is reached over a URL with
-// no local command, so the in-path stdio broker cannot sit in front of it.
+// no local command, so the in-path stdio broker cannot mediate it.
 func (s Server) isRemote() bool {
 	t := strings.ToLower(s.Type)
 	return t == "http" || t == "sse" || (s.Command == "" && s.URL != "")
@@ -84,7 +84,7 @@ const (
 	// auto-fetches whatever was published last (the malicious-update / rug-pull vector).
 	UnpinnedInstall
 	// Remote marks a launch-config server reached over HTTP/SSE at an external URL. The in-path
-	// stdio broker cannot sit in front of it, so the exposure is the remote endpoint itself,
+	// stdio broker cannot mediate it, so the exposure is the remote endpoint itself,
 	// not the absence of tool brokering.
 	Remote
 )
@@ -224,7 +224,7 @@ func (r Report) String() string {
 // the real launch config ({"mcpServers":{...}}) and the security manifest ({"servers":[...]});
 // a launch config takes precedence if both keys are present.
 //
-// Claude Code's ~/.claude.json keeps servers in two places: a top-level "mcpServers" and a
+// Some configs (e.g. ~/.claude.json) keep servers in two places: a top-level "mcpServers" and a
 // per-project "projects"[path]."mcpServers". Both are scanned, so a project-scoped server is
 // never silently skipped; project-scoped servers are labelled "<project>/<name>" so they stay
 // distinct from a top-level server of the same name.

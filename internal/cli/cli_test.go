@@ -61,7 +61,7 @@ func TestReceiptRequiresFile(t *testing.T) {
 
 func TestKeygenCreatesKey(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "key")
-	code, out, errb := run("keygen", "--path", path)
+	code, out, errb := run("keygen", "--key", path)
 	if code != 0 {
 		t.Fatalf("keygen exit=%d stderr=%q", code, errb)
 	}
@@ -69,7 +69,7 @@ func TestKeygenCreatesKey(t *testing.T) {
 		t.Fatalf("keygen output missing path/public: %q", out)
 	}
 	// Second run must be idempotent: same public key, still exit 0.
-	_, out2, _ := run("keygen", "--path", path)
+	_, out2, _ := run("keygen", "--key", path)
 	if out2 != out {
 		t.Fatalf("keygen not idempotent:\n first=%q\nsecond=%q", out, out2)
 	}

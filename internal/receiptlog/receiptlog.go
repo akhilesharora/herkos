@@ -57,9 +57,9 @@ type Entry struct {
 	ReqHash string `json:"req_hash,omitempty"`
 	Allowed bool   `json:"allowed"`
 	PubKey  string `json:"pubkey,omitempty"`
-	// Context is the fingerprint of the served code-context set, carried on the open record
-	// only, so the signed audit proves the brokered calls happened under THIS context-egress
-	// binding. Empty when the content gate is not armed.
+	// Context is the fingerprint of the served span set, carried on the open record only, so the
+	// signed audit proves the brokered calls happened under THIS served set. Empty when the
+	// content gate is not armed.
 	Context string `json:"context,omitempty"`
 	Count   int    `json:"count,omitempty"`
 	Hash    string `json:"hash"`
@@ -124,8 +124,8 @@ type Chain struct {
 // Open creates the JSONL log at path, refusing to touch a non-empty file (one file = one
 // session, which keeps the chain unambiguous and avoids a second genesis on restart). It mints
 // a random session id and writes the signed genesis record, binding the session, the signer's
-// public key, and contextFingerprint - a fingerprint of the served code-context set, so the
-// signed audit proves the brokered calls happened under this context-egress binding. Pass ""
+// public key, and contextFingerprint - a fingerprint of the served span set, so the signed
+// audit proves the brokered calls happened under this served set. Pass ""
 // when the content gate is not armed.
 func Open(path string, priv ed25519.PrivateKey, contextFingerprint string) (*Chain, error) {
 	if len(priv) != ed25519.PrivateKeySize {

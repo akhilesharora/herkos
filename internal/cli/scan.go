@@ -11,7 +11,7 @@ import (
 )
 
 // scanCmd inspects an MCP config and prints a shareable one-line receipt. On a real launch
-// config ({"mcpServers":{...}}, the Claude Code / Cursor / Cline shape) it flags servers that
+// config ({"mcpServers":{...}} or a top-level "servers" object) it flags servers that
 // run directly instead of through the broker (unbrokered) and npx auto-installs of unpinned
 // packages. On a security manifest ({"servers":[...]} with declared tool metadata) it flags
 // over-scoped servers, unrestricted egress, and - when --baseline is supplied - poisoned

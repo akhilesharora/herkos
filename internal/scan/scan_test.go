@@ -292,9 +292,9 @@ func TestScanFlagsHTTPRemote(t *testing.T) {
 	}
 }
 
-// TestLoadConfigVSCodeServers pins the VS Code / GitHub Copilot shape: a "servers" OBJECT is a
-// launch config (like mcpServers), while a "servers" ARRAY stays the security manifest.
-func TestLoadConfigVSCodeServers(t *testing.T) {
+// TestLoadConfigServersObject pins the servers-object shape: a "servers" OBJECT is a launch
+// config (like mcpServers), while a "servers" ARRAY stays the security manifest.
+func TestLoadConfigServersObject(t *testing.T) {
 	dir := t.TempDir()
 	obj := filepath.Join(dir, "vscode.json")
 	if err := os.WriteFile(obj, []byte(`{"servers":{
