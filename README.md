@@ -1,5 +1,7 @@
 # Herkos
 
+[![ci](https://github.com/akhilesharora/herkos/actions/workflows/ci.yml/badge.svg)](https://github.com/akhilesharora/herkos/actions/workflows/ci.yml) · [Live site](https://akhilesharora.github.io/herkos/) · Apache-2.0
+
 A local-first, pure-Go reference implementation of **SpanGate**: the idea that the minimal
 code context an AI agent *needs* to answer a query is exactly the set it should be *allowed*
 to send back out. One code-graph relevance set serves as both the model's context and a

@@ -1,0 +1,21 @@
+version: 2
+
+project_name: herkos
+
+builds:
+  - main: ./cmd/herkos
+    binary: herkos
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+    # CGO is off for portable release binaries, so `herkos index` (tree-sitter, cgo) is
+    # disabled in these builds; install with `go install` for the full index path.
+
+archives:
+  - name_template: "herkos_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
