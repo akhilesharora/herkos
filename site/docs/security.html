@@ -75,7 +75,7 @@
 
     <div class="note">
       <span class="label">Pin what your agent sees</span>
-      <p><strong>Pin what your agent sees. That is all that can leave.</strong> The spans Herkos serves are the same set it allows out: with a served set pinned, verbatim repo lines from outside that set are blocked on the way to a tool call. This is a userspace tripwire, not a sandbox - encoded, paraphrased, or reflowed exfil can still slip past, and a kernel-enforced boundary (Landlock, seccomp, eBPF) is next on the roadmap.</p>
+      <p><strong>Pin what your agent sees. That is all that can leave.</strong> The spans Herkos serves are the same set it allows out: with a served set pinned, repo lines from outside that set are blocked on the way to a tool call. The match normalizes case and whitespace first, so a recase or a reflow of a served line still trips it. This is a userspace tripwire, not a sandbox - encoded or paraphrased exfil, or a line split across calls, can still slip past, and a kernel-enforced boundary (Landlock, seccomp, eBPF) is next on the roadmap.</p>
     </div>
 
     <h2 id="threat-model">Threat model</h2>
@@ -91,8 +91,9 @@
     <ul>
       <li><strong>Deny-by-default tool control.</strong> The in-path broker (<code>herkos serve</code>) passes only the <code>tools/call</code> whose tool name you allowed with <code>--allow-tool</code>. Anything else is blocked in-path and answered with a JSON-RPC error, and the session keeps running.</li>
       <li><strong>A signed audit trail.</strong> Every answer ships a signed Merkle receipt of which spans touched the model, verifiable locally with your own ed25519 key.</li>
+      <li><strong>A context-bound call log.</strong> <code>serve --receipts</code> writes a per-call, ed25519-signed, sha256 hash-chained record of every brokered <code>tools/call</code> - the tool name, a hash of the request, and the allow/deny decision. It is fail-closed and offline-verifiable with only the public key; <code>herkos verify</code> detects any edit, reorder, truncation, or wrong key. With a served set pinned, the log's opening record commits a fingerprint of the served context, so the receipt proves which context-egress binding was in force. This is the per-call decision log, separate from the Merkle receipt of which spans touched the model.</li>
       <li><strong>Config auditing.</strong> <code>herkos scan</code> flags over-scoped tools, poisoned tool descriptions, and servers with unrestricted egress, with a receipt you can diff against a baseline.</li>
-      <li><strong>Dual-use egress gate (opt-in).</strong> Pin the spans the model may see with <code>--served-span</code> and Herkos blocks <code>tools/call</code> arguments that carry verbatim repo lines from outside that set. It is a userspace tripwire on verbatim content, not a sandbox; the published bypass below says exactly what it does not catch.</li>
+      <li><strong>Dual-use egress gate (opt-in).</strong> Pin the spans the model may see with <code>--served-span</code> and Herkos blocks <code>tools/call</code> arguments that carry repo lines from outside that set. Matching normalizes case and whitespace, so a recase or a reflow of a served line still trips it. It is a userspace tripwire on line content, not a sandbox; the published bypass below says exactly what it does not catch.</li>
     </ul>
 
     <h2 id="bypass">The published bypass</h2>
@@ -110,7 +111,7 @@
         </li>
         <li>
           <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
-          <span><b>Encode out-of-set bytes before they leave.</b> With a served set pinned, the content gate blocks tool-call arguments carrying <i>verbatim</i> repo lines from outside that set. Base64, paraphrase, reflowed whitespace, or splitting a line across calls all defeat a verbatim match, and an unarmed broker (no served set) does not inspect arguments at all. The transformation-resistant, kernel-enforced boundary is the roadmap item, not this tripwire.</span>
+          <span><b>Encode out-of-set bytes before they leave.</b> With a served set pinned, the content gate blocks tool-call arguments carrying repo lines from outside that set. It normalizes case and whitespace before matching, so a recase or a reflow no longer slips a served line past it. What still defeats the match: base64 or other encoding, a paraphrase or token-rewrite, or splitting a line across calls - and an unarmed broker (no served set) does not inspect arguments at all. The transformation-resistant, kernel-enforced boundary is the roadmap item, not this tripwire.</span>
         </li>
         <li>
           <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
@@ -132,7 +133,7 @@
     <table>
       <thead><tr><th>Work</th><th>What it adds</th></tr></thead>
       <tbody>
-        <tr><td><strong>SpanGate payload path</strong></td><td>Shipped as a userspace tripwire: with a served set pinned, verbatim repo lines outside it are blocked on the egress path (<code>--served-span</code>). What remains is provenance that survives transformation (encoding, paraphrase, reflow) so egress is enforced rather than approximated by a verbatim match.</td></tr>
+        <tr><td><strong>SpanGate payload path</strong></td><td>Shipped as a userspace tripwire: with a served set pinned, repo lines outside it are blocked on the egress path (<code>--served-span</code>), matched after case and whitespace are normalized. What remains is provenance that survives deeper transformation (encoding, paraphrase, splitting a line across calls) so egress is enforced rather than approximated by a line match.</td></tr>
         <tr><td><strong>Hardened mode</strong></td><td>Moves enforcement into the OS. First layer shipped: <code>serve --isolate</code> runs a server in a no-egress network namespace, unprivileged. Still to come: per-destination host allowlisting via eBPF, plus Landlock and seccomp - the kernel-enforced seal that userspace cannot be.</td></tr>
       </tbody>
     </table>

@@ -103,8 +103,10 @@
     </div>
 
     <h2 id="receipts">Receipts</h2>
-    <p>Every answer ships a signed Merkle receipt of which spans touched the model. The receipt is built from the served span set, signed with your local ed25519 key, and verifiable on your machine. No server has to vouch for it.</p>
-    <p>A receipt lets you answer, after the fact and with proof, the question "what did the model actually see for this query." It is a record you hold, not a log you have to trust a vendor to keep.</p>
+    <p>Herkos produces two kinds of signed proof, for two different questions. Both are signed with your local ed25519 key and verifiable on your machine, so no server has to vouch for either.</p>
+
+    <h3 id="span-receipt">The span receipt: what the model saw</h3>
+    <p>Every answer ships a signed Merkle receipt of which spans touched the model. The receipt is built from the served span set and lets you answer, after the fact and with proof, the question "what did the model actually see for this query." It is a record you hold, not a log you have to trust a vendor to keep.</p>
     <div class="terminal" style="margin: 18px 0;">
       <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="title">a verified receipt</span></div>
 <pre aria-label="verified receipt output"><span class="c-dim">SpanGate demo (files [auth.go db.go])</span>
@@ -113,6 +115,10 @@
   receipt: <span class="c-ok">VERIFIED</span>  root=<span class="c-hash">02659078080f474c9fac20c7a83aa070f95cda014e0b0ea0994d7dde477d3008</span></pre>
     </div>
     <p>The Merkle root is deterministic over the canonicalized span set, so two runs that served the same spans produce the same root. Re-verify a saved receipt with <code>herkos receipt --file &lt;r.json&gt;</code>.</p>
+
+    <h3 id="audit-log">The serve audit log: what the broker did</h3>
+    <p>The span receipt proves what went in. The audit log proves what the broker let out. Run <code>herkos serve --receipts &lt;dir&gt;</code> and Herkos writes a per-session log with one record for every brokered <code>tools/call</code>: the tool name, a hash of the request, and whether it was allowed or denied. Each record is ed25519-signed and sha256 hash-chained to the one before it, so any edit, reorder, or dropped record breaks the chain. A reader verifies the whole log offline with only the public key.</p>
+    <p>When you serve with a pinned span set, the log's opening record also commits a fingerprint of that served context. The signed chain then proves which context-egress binding was in force for the calls it records, not just that some calls happened. Verify a log the same way as a receipt: <code>herkos verify --file &lt;log&gt; --pubkey &lt;hex&gt;</code>.</p>
 
     <h2 id="modes">Enforcement modes</h2>
     <p>How strictly egress is enforced comes in layers. Be clear about which you are running.</p>

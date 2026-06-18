@@ -115,7 +115,7 @@
     </div>
 
     <h2 id="serve">3. Run the broker</h2>
-    <p>If your agent launches MCP servers directly, you can also run the broker yourself. <code>serve</code> sits in-path in front of the upstream server. A <code>tools/call</code> to any tool you did not allow is blocked in-path and answered with a JSON-RPC error. The agent's session keeps running.</p>
+    <p>If your agent launches MCP servers directly, you can also run the broker yourself. <code>serve</code> speaks the MCP stdio wire format and sits in-path in front of the upstream server, so it brokers a real MCP server unchanged. A <code>tools/call</code> to any tool you did not allow is blocked in-path and answered with a JSON-RPC error; an allowed call is forwarded untouched. The agent's session keeps running.</p>
     <div class="cmd">
       <pre><span class="c-prompt">$ </span>herkos serve <span class="c-flag">--allow-tool</span> read_file <span class="c-flag">--allow-tool</span> list_dir -- npx -y @some/mcp-server</pre>
       <button class="copy-btn" type="button" aria-label="Copy command">
@@ -125,7 +125,7 @@
     </div>
 
     <h2 id="audit">4. Keep a signed audit log</h2>
-    <p>Add <code>--receipts &lt;dir&gt;</code> and every brokered tool call is appended to a signed, hash-chained log in a fresh per-session file. Editing, reordering, or dropping a record breaks verification. On shutdown the log is sealed and its tip hash is printed, so you can record it and later detect a truncated log.</p>
+    <p>Add <code>--receipts &lt;dir&gt;</code> and every brokered tool call is appended to a signed, hash-chained log in a fresh per-session file: an offline-verifiable record of the calls that went through the broker. Editing, reordering, or dropping a record breaks verification. On shutdown the log is sealed and its tip hash is printed, so you can record it and later detect a truncated log. Check it any time with <code>herkos verify --pubkey</code>, no network or service needed.</p>
     <div class="cmd">
       <pre><span class="c-prompt">$ </span>herkos serve <span class="c-flag">--allow-tool</span> read_file <span class="c-flag">--receipts</span> ~/.herkos/audit -- npx -y @some/mcp-server</pre>
       <button class="copy-btn" type="button" aria-label="Copy command">
@@ -171,7 +171,7 @@
 
     <div class="note warn">
       <span class="label">Know what you are getting</span>
-      <p>By default the broker gates the tool name of outbound <code>tools/call</code> only: it does not inspect arguments or gate other methods. With a served set pinned (<code>--served-span</code> plus <code>--index</code>) it also blocks arguments carrying verbatim repo lines from outside that set - a userspace tripwire that encoding or paraphrase defeats. <code>--isolate</code> cuts a server's own outbound network at the kernel. Read the <a href="security.html">security model</a> before relying on any of it for something sensitive.</p>
+      <p>By default the broker gates the tool name of outbound <code>tools/call</code> only: it does not inspect arguments or gate other methods. With a served set pinned (<code>--served-span</code> plus <code>--index</code>) it also blocks arguments carrying verbatim repo lines from outside that set. It normalizes case and whitespace first, so a reflow or recase of a served line still trips it; encoding, paraphrase, or splitting a line across calls still defeats it. Treat it as a userspace tripwire, not a wall. <code>--isolate</code> cuts a server's own outbound network at the kernel. Read the <a href="security.html">security model</a> before relying on any of it for something sensitive.</p>
     </div>
 
     <h2 id="next">Next</h2>

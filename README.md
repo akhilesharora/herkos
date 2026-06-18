@@ -8,9 +8,9 @@ to send back out. One code-graph relevance set serves as both the model's contex
 deny-by-default egress allowlist, and every answer produces a signed, offline-verifiable
 Merkle receipt of which spans touched the model.
 
-This is an engineering study of that idea, built end to end and scoped honestly. It is not a
-product - see [Findings](#findings) for why - but it is a clean, tested codebase you can read,
-run, and verify.
+This is a working utility built around that idea, end to end and scoped honestly - see
+[Findings](#findings) for the market and threat analysis. It is a clean, tested codebase you can
+read, run, and verify.
 
 ## SpanGate
 For each query, Herkos's local tree-sitter code graph emits a minimal set of
@@ -23,8 +23,9 @@ Merkle receipt, verifiable offline by a third party with only the public key.
 ## What works
 The pure-Go SpanGate core (SELECT -> Binding -> canonicalize -> pool -> signed receipt, with
 the dual-use leak provably blocked), the tree-sitter parser (Go/TS/Python), the on-disk index,
-the CLI, and the live in-path MCP broker (`herkos serve`) all work and are tested under the
-race detector, fuzzed, and gated on a clean-checkout build.
+the CLI, and the live in-path MCP broker (`herkos serve`, MCP newline-framed and verified end
+to end against a real MCP server) all work and are tested under the race detector, fuzzed, and
+gated on a clean-checkout build.
 
 Enforcement is described plainly, because a security tool that hides its gaps is worse than
 none:
@@ -32,13 +33,15 @@ none:
 - The broker's **default egress guard is tool-name only** - it gates which `tools/call` reach
   the upstream, not payload bytes or other methods.
 - Pinning a served set (`--served-span` with `--index`) adds a **content gate** that blocks
-  tool-call arguments carrying verbatim repo lines from outside the set. This is a userspace
-  tripwire that encoding, paraphrase, reflow, or line-splitting defeat - not an airtight
-  boundary.
+  tool-call arguments carrying repo lines from outside the set, after normalizing case and
+  whitespace so a reflow or recase still trips. This is a userspace tripwire that paraphrase,
+  encoding, or token rewrite still defeat - not an airtight boundary.
 - `serve --receipts <dir>` keeps a **signed, hash-chained audit log** of every brokered tool
   call, fail-closed (an audit-write failure stops the session rather than letting an unlogged
-  call through). `herkos verify` detects any edit, reorder, or mid-drop, and reports a
-  truncated log (one missing its signed close) as incomplete.
+  call through). `herkos verify` detects any edit, reorder, or mid-drop offline with only the
+  public key, and reports a truncated log (one missing its signed close) as incomplete. With a
+  served set pinned, the opening record commits a fingerprint of that served context, so the
+  receipt proves which context-egress binding was in force.
 - `serve --isolate` runs a server in a **kernel network namespace with no route out**
   (unprivileged, Linux), so a server that only needs stdio to Herkos cannot open its own
   socket to any host. The transformation-resistant, full per-destination egress seal (eBPF
@@ -46,9 +49,26 @@ none:
 
 The signed receipt is the one durable, distinctive piece, and it works today.
 
+## Reproduce it yourself
+Broker a real MCP server, deny a tool in-path, and verify the signed receipt offline:
+```
+herkos keygen
+# brokers the real server; echo is allowed, any other tools/call is blocked in-path
+herkos serve --allow-tool echo --receipts /tmp/r -- npx -y @modelcontextprotocol/server-everything
+herkos verify --file /tmp/r/<session>.jsonl --pubkey <public-key>   # VERIFIED ... cleanly closed
+```
+Editing a record, dropping the sealed last line, or using a different public key all make
+`herkos verify` fail. Pin a served set and it is bound into the receipt:
+```
+herkos index .
+herkos serve --allow-tool read_file --index .herkos/index --served-span auth.go:1-40 \
+  --receipts /tmp/r -- npx -y @some/mcp-server
+# the receipt's opening record now commits a fingerprint of the served set; flipping it fails verify
+```
+
 ## Findings
 Market and threat analysis (see [`CASE-STUDIES.md`](docs/CASE-STUDIES.md) for worked examples
-against real 2025 MCP incidents) concluded that Herkos is a study, not a product:
+against real 2025 MCP incidents) found:
 
 - The in-path tool-name broker is **commodity** - Claude Code ships native MCP tool
   allow/deny in `settings.json`.
@@ -63,11 +83,12 @@ against real 2025 MCP incidents) concluded that Herkos is a study, not a product
   and signed agent-action provenance is itself an emerging, commoditizing pattern.
 
 So Herkos stands as a reference implementation of the idea and the engineering - SpanGate's
-dual-use invariant and verifiable receipts, done cleanly - rather than a commercial product.
+dual-use invariant and verifiable receipts, done cleanly.
 
 The one genuinely novel idea, written up honestly (what it is, why it differs from IFC and
 signed-receipt work, and exactly where it holds and does not), is in
-[`DUAL-USE-BINDING.md`](docs/DUAL-USE-BINDING.md).
+[`DUAL-USE-BINDING.md`](docs/DUAL-USE-BINDING.md). The honest field map, on three axes against
+Pipelock, capgate, mcp-spine, mcp-scan, and srt, is in [`comparison.md`](docs/comparison.md).
 
 ## Run
 ```
@@ -115,9 +136,8 @@ make verify-clean  # build+vet+race the COMMITTED tree (HEAD) from a throwaway w
 ```
 
 ## Write-up
-The honest account - what I built, why prevention is not achievable, where it stands against
-the field, and why this is a reference artifact rather than a product - is in
-[WRITEUP.md](docs/WRITEUP.md).
+The honest account - what I built, why prevention is not achievable, and where it stands
+against the field - is in [WRITEUP.md](docs/WRITEUP.md).
 
 ## License
 Apache-2.0.

@@ -120,7 +120,7 @@
     <h2 id="herkos">Where Herkos helps, and where it does not</h2>
     <ul>
       <li><strong>Broker: does NOT prevent.</strong> <code>create_pull_request</code> is a tool the user legitimately allowed. A tool-name allowlist passes it. Prevention here needs per-task data scoping and least-privilege tokens (Invariant's own advice: one repo per session), not a name check.</li>
-      <li><strong>Content gate: partial at best.</strong> With a served set pinned, Herkos blocks tool-call arguments carrying verbatim repo lines from outside it - but the leaked data here is repo names and facts, not necessarily verbatim served lines, and any encoding defeats a verbatim match. Do not lean on it for this.</li>
+      <li><strong>Content gate: partial at best.</strong> With a served set pinned, Herkos blocks tool-call arguments carrying verbatim repo lines from outside it. It normalizes case and whitespace first, so a reflow or recase of a served line still trips it - but the leaked data here is repo names and facts, not necessarily served lines, and encoding or paraphrase defeats a verbatim match. Do not lean on it for this.</li>
       <li><strong>Receipt: strong.</strong> This is the real value. The audit log records that <code>create_pull_request</code> ran, with the request hashed, signed, and chained. After a leak you can prove exactly what left and when. Forensics, not a force field.</li>
     </ul>
 

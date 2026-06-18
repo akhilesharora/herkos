@@ -4,8 +4,8 @@
 what it may send should be the *same* object, computed once. Herkos calls that object a
 `Binding`. This note states the idea, separates it from the signed-receipt and
 information-flow-control work it superficially resembles, and says plainly where it holds and
-where it does not. It is a design note, not a product pitch (see [README](README.md) for what
-Herkos is and is not).
+where it does not. It is a design note (see [README](README.md) for what Herkos is and is
+not).
 
 ## The problem
 
@@ -115,4 +115,4 @@ more useful one than another signed-receipt format.
 
 Reference implementation in Go: `internal/core` (`Binding`, `SpanSet`), the SpanGate pipeline,
 and ed25519 Merkle receipts (`pkg/receipt`), with the egress half wired into `herkos serve`
-as an opt-in content gate. Reference implementation, not a product.
+as an opt-in content gate. A reference implementation of the idea.

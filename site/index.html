@@ -97,7 +97,7 @@
       <h2 class="reveal" data-d="1" style="max-width: 20ch;">Scan a server, broker its calls, prove the log.</h2>
       <p class="lede reveal" data-d="2" style="margin-top: 16px;">A real terminal and the real binary: <code class="mono">scan</code> flags an unpinned, unbrokered MCP server; a brokered call lands in a signed, hash-chained log that verifies offline; tamper with it and <code class="mono">verify</code> catches it.</p>
       <div class="reveal" data-d="2" style="margin-top: 24px; border:1px solid var(--line-2); border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow); background:#161e30;">
-        <img src="demo.gif" width="1200" height="660" loading="lazy" alt="herkos scan flags an unpinned, unbrokered server; herkos verify reports VERIFIED for a signed audit log and INCOMPLETE for a tampered one" style="display:block; width:100%; height:auto;">
+        <img src="demo.gif" width="1200" height="660" loading="lazy" alt="herkos scan flags an unbrokered, unpinned, remote MCP server; herkos serve brokers a real MCP server and blocks a non-allowlisted tool in-path; herkos verify reports VERIFIED for the signed context-bound receipt and FAILED when a byte is tampered" style="display:block; width:100%; height:auto;">
       </div>
     </div>
   </section>
@@ -253,7 +253,7 @@
           </li>
           <li>
             <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
-            <span><b>The content gate is a tripwire, not a wall.</b> Pin a span, then send the same repo line base64-encoded, reflowed, or split across two calls and it sails through. By design - it matches verbatim content only.</span>
+            <span><b>The content gate is a tripwire, not a wall.</b> Pin a span, then send the same repo line base64-encoded, paraphrased, or split across two calls and it sails through. It normalizes case and whitespace first, so a reflow or recase trips it - but it matches content, not meaning.</span>
           </li>
           <li>
             <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
@@ -385,7 +385,7 @@
           </li>
           <li>
             <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>
-            <span><b>Encode the bytes to get them past the content gate.</b> With a served set pinned (<code>--served-span</code>), Herkos blocks tool-call arguments carrying <i>verbatim</i> repo lines from outside that set. Base64, paraphrase, reflowed whitespace, or splitting a line across calls all defeat a verbatim match. The transformation-resistant, kernel-enforced boundary is on the roadmap.</span>
+            <span><b>Encode the bytes to get them past the content gate.</b> With a served set pinned (<code>--served-span</code>), Herkos blocks tool-call arguments carrying repo lines from outside that set, after normalizing case and whitespace. Base64, paraphrase, or splitting a line across calls still defeat the match; a reflow or recase no longer does. The transformation-resistant, kernel-enforced boundary is on the roadmap.</span>
           </li>
           <li>
             <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round"/></svg>

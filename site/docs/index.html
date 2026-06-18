@@ -83,7 +83,8 @@
       <tbody>
         <tr><td><strong>SpanGate</strong></td><td>The core. Emits the minimal span set and uses it as both context and allowlist.</td></tr>
         <tr><td><strong>The broker</strong></td><td><code>herkos serve</code> sits in-path in front of an MCP server and gates outbound tool calls by tool name, deny-by-default.</td></tr>
-        <tr><td><strong>Receipts</strong></td><td>Signed Merkle receipts of which spans touched the model, verifiable locally with your own key.</td></tr>
+        <tr><td><strong>Span receipt</strong></td><td>A signed Merkle receipt of which spans touched the model, verifiable locally with your own key.</td></tr>
+        <tr><td><strong>Serve audit log</strong></td><td><code>herkos serve --receipts</code> writes a separate per-call, signed, hash-chained log of every brokered <code>tools/call</code> (tool name, request hash, allow or deny), verifiable offline with just the public key.</td></tr>
         <tr><td><strong>Scanner</strong></td><td><code>herkos scan</code> audits an MCP config for over-scoped tools, poisoned descriptions, and unrestricted egress.</td></tr>
       </tbody>
     </table>
@@ -101,7 +102,7 @@
 
     <div class="note warn">
       <span class="label">Status</span>
-      <p>Early development, working end to end. The SpanGate core, the tree-sitter parser, the CLI, and the live in-path broker all work today. The broker's egress guard is tool-name only for now, and <code>userspace</code> mode is advisory rather than kernel-enforced. Not production-secure yet. See the <a href="security.html">security model</a> for exactly what holds and what does not.</p>
+      <p>Early development, working end to end. The SpanGate core, the tree-sitter parser, the CLI, and the live in-path broker all work today. The broker speaks the real MCP stdio wire format and was verified against a reference MCP server: an allowed tool reaches the upstream server, a non-allowlisted one is blocked in-path with a JSON-RPC error and the session keeps going. The broker's egress guard is tool-name only for now, and <code>userspace</code> mode is advisory rather than kernel-enforced. Not production-secure yet. See the <a href="security.html">security model</a> for exactly what holds and what does not.</p>
     </div>
 
     <div class="docs-foot">

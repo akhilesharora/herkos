@@ -1,7 +1,7 @@
-# Herkos: an MCP egress broker, and why I am not shipping it as a product
+# Herkos: an MCP egress broker, and an honest map of where it stands
 
 This is the honest write-up of a project I built end to end and then talked myself out of. It
-is a reference implementation, not a product, and the interesting part is *why* - because the
+is a reference implementation of the idea, and the interesting part is *why* - because the
 reasoning is a reasonable map of what is solved, what is not, and what is worth a reader's time
 in agent security right now.
 
