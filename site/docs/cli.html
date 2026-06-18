@@ -96,7 +96,7 @@
     </div>
 
     <h2 id="register">register</h2>
-    <p>Wire Herkos into an MCP config. Two modes. <b>Wrap an existing server</b> with <code>--server &lt;name&gt;</code>: Herkos rewrites that entry in place to launch through the broker, preserving its <code>env</code>, and leaves <i>no</i> direct entry the agent could still call - so there is no bypass. <b>Add a new brokered server</b> by passing the upstream command after <code>--</code>.</p>
+    <p>Wire Herkos into an MCP config. Three modes. <b>Wrap an existing server</b> with <code>--server &lt;name&gt;</code>: Herkos rewrites that entry in place to launch through the broker, preserving its <code>env</code>, and leaves <i>no</i> direct entry the agent could still call - so there is no bypass. <b>Add a new brokered server</b> by passing the upstream command after <code>--</code>. <b>Broker everything</b> with <code>--all</code>: it wraps every local stdio server in the config, discovering each server's tools and pinning them as its allowlist.</p>
     <div class="cmd">
       <pre><span class="c-prompt">$ </span>herkos register <span class="c-flag">--config</span> &lt;mcp.json&gt; <span class="c-flag">--server</span> &lt;name&gt; <span class="c-flag">--allow-tool</span> &lt;tool&gt;</pre>
       <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
@@ -106,6 +106,7 @@
       <tbody>
         <tr><td><code>--config &lt;mcp.json&gt;</code></td><td>Path to the MCP config to rewrite.</td></tr>
         <tr><td><code>--server &lt;name&gt;</code></td><td>Wrap the server already named in the config, in place. <code>unregister</code> reverses it losslessly. Preferred: no un-brokered entry is left behind.</td></tr>
+        <tr><td><code>--all</code></td><td>Broker every local stdio server in the config in one pass, pinning each to its currently-exposed tools. Skips remotes and already-brokered entries. Not combinable with <code>--server</code>.</td></tr>
         <tr><td><code>--allow-tool &lt;tool&gt;</code></td><td>Allow a tool by name. Repeat for each tool. Anything not listed is denied.</td></tr>
         <tr><td><code>-- &lt;upstream cmd&gt;</code></td><td>Add-new mode: the upstream server command. Everything after <code>--</code> is passed through.</td></tr>
       </tbody>

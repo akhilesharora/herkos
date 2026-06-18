@@ -84,8 +84,8 @@
       <p>The agent can call only the tools you <code>--allow-tool</code>, and (as of the tool-list filter) only <em>sees</em> those tools in its catalog. Add <code>--receipts &lt;dir&gt;</code> for a signed audit log, and <code>--isolate</code> to cut the server's own network. The exact config file differs by client; the wrap is always the same.</p>
     </div>
 
-    <h2 id="json-family">JSON config clients (Claude Code, Cursor, Cline, Windsurf)</h2>
-    <p>These store MCP servers as <code>{"mcpServers": {name: {command, args}}}</code> JSON, in their own location (for example Claude Code's <code>.mcp.json</code> or <code>~/.claude.json</code>; Cursor's <code>~/.cursor/mcp.json</code>). The wrapped entry:</p>
+    <h2 id="json-family">JSON configs: the <code>mcpServers</code> and <code>servers</code> shapes</h2>
+    <p>Most clients store MCP servers as <code>{"mcpServers": {name: {command, args}}}</code> JSON; some use a top-level <code>{"servers": {...}}</code> object of the same shape. Each lives in its own location - for example <code>.mcp.json</code> / <code>~/.claude.json</code>, <code>~/.cursor/mcp.json</code>, or <code>.vscode/mcp.json</code> (e.g. Claude Code, Cursor, VS Code, GitHub Copilot). The wrapped entry:</p>
     <div class="cmd"><pre>{
   "mcpServers": {
     "github": {
@@ -97,6 +97,8 @@
 }</pre></div>
     <p>For this format, <code>herkos register</code> does the rewrite for you, in place, leaving no un-brokered entry behind:</p>
     <div class="cmd"><pre><span class="c-prompt">$ </span>herkos register <span class="c-flag">--config</span> .mcp.json <span class="c-flag">--server</span> github <span class="c-flag">--allow-tool</span> get_issue</pre></div>
+    <p>Or broker every local stdio server in the config in one pass: <code>register --all</code> launches each server once, discovers the tools it exposes, and pins them as its allowlist (so a tool added by a later update is denied), skipping remotes and already-brokered entries.</p>
+    <div class="cmd"><pre><span class="c-prompt">$ </span>herkos register <span class="c-flag">--all</span> <span class="c-flag">--config</span> .mcp.json</pre></div>
 
     <h2 id="codex">Codex</h2>
     <p>Codex stores MCP servers as TOML in <code>~/.codex/config.toml</code>. Same wrap, TOML syntax:</p>
@@ -106,12 +108,12 @@ args = ["serve", "--allow-tool", "get_issue", "--",
         "npx", "-y", "@modelcontextprotocol/server-github"]</pre></div>
     <p>The broker itself is verified to speak the MCP stdio protocol both ways; the TOML config above is the wrapping pattern in Codex's format. <code>herkos register</code> does not rewrite TOML yet, so this one is hand-edited for now.</p>
 
-    <h2 id="other">VS Code and other MCP clients</h2>
-    <p>VS Code's native MCP support uses a <code>{"servers": {...}}</code> object (note the key) in <code>.vscode/mcp.json</code> or settings; the entry is the same <code>command</code> / <code>args</code> wrap. Any other client that launches a stdio MCP server works identically: find where it lists servers, and point the command at <code>herkos serve -- &lt;the real command&gt;</code>.</p>
+    <h2 id="other">Other MCP clients</h2>
+    <p>Any client that launches a stdio MCP server works identically: find where it lists servers, and point the command at <code>herkos serve -- &lt;the real command&gt;</code>. If it uses either the <code>mcpServers</code> or the <code>servers</code> JSON shape, <code>scan</code> and <code>register</code> (including <code>register --all</code>) handle it automatically; a format outside those JSON shapes, such as Codex TOML, is the same one-line wrap, hand-edited.</p>
 
     <div class="note warn">
       <span class="label">Honest scope</span>
-      <p>The broker is client-agnostic, verified end to end with the official <code>@modelcontextprotocol/sdk</code> client - the same library Claude Code, Cursor, and Cline use - connecting through Herkos to a reference server: it completed the handshake, saw only the allowlisted tools, called an allowed one, and had a denied one blocked in-path. Config <em>locations</em> vary by client and change over time, so check your client's own MCP docs for the exact file; the wrap (command points at <code>herkos serve</code>) does not change. <code>scan</code> and <code>register</code> currently understand the <code>{"mcpServers": {...}}</code> JSON family (Claude Code, Cursor, Cline, Windsurf); Codex TOML and the VS Code <code>servers</code> key are hand-edited for now.</p>
+      <p>The broker is client-agnostic, verified end to end with the official <code>@modelcontextprotocol/sdk</code> client - the same library Claude Code, Cursor, and Cline use - connecting through Herkos to a reference server: it completed the handshake, saw only the allowlisted tools, called an allowed one, and had a denied one blocked in-path. Config <em>locations</em> vary by client and change over time, so check your client's own MCP docs for the exact file; the wrap (command points at <code>herkos serve</code>) does not change. <code>scan</code> and <code>register</code> auto-detect both JSON launch-config shapes - the <code>mcpServers</code> object and the <code>servers</code> object - so most clients are a single command (and <code>register --all</code> brokers every local stdio server at once); a format outside those JSON shapes, such as Codex TOML, is the same one-line wrap, hand-edited.</p>
     </div>
   </main>
 </div>
