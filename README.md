@@ -13,7 +13,13 @@ The live broker (`herkos serve`) enforces that same set on the wire:
 
 ![The broker: the agent's tool calls pass through herkos serve, a deny-by-default tool gate plus content tripwire, to the upstream MCP server, with every brokered call written to a signed, hash-chained, context-bound audit log](docs/diagrams/broker-data-path.svg)
 
-## Install / Use it with your agent
+## Install
+```
+go install github.com/akhilesharora/herkos/cmd/herkos@latest
+```
+Building from source (or `make build`) needs Go 1.25+ and a C toolchain: the `herkos index` code-graph step uses tree-sitter through cgo. Prebuilt binaries on the [releases page](https://github.com/akhilesharora/herkos/releases) are CGO-off and portable, so everything works except `herkos index`; build from source if you want the SpanGate index. `serve --isolate` is Linux-only.
+
+## Use it with your agent
 Herkos presents as an MCP server to whatever launches it and forwards to the real one, so it works in front of any MCP client with no client-specific code. Wrapping a server is one config change: point the client's `command` at `herkos serve` and pass the real command after `--`.
 
 First, generate the local signing key (stays on your machine, `0600`):
@@ -97,6 +103,9 @@ make verify-clean  # build + vet + race the committed code, not the working tree
 
 ## Write-up
 The honest account of why it was built, why prevention is not achievable, and where it does work is in [WRITEUP.md](docs/WRITEUP.md).
+
+## Security
+Report a vulnerability through [SECURITY.md](SECURITY.md). Herkos ships its own bypass list, so what it does not catch is written down in the [case studies](docs/CASE-STUDIES.md) and the security model, not hidden.
 
 ## License
 Apache-2.0.
