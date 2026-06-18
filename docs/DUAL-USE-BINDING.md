@@ -55,7 +55,7 @@ func (b Binding) AuthorizePayload(req EgressRequest) Decision {
 
 The pieces look familiar; the combination is not.
 
-- **Information-flow control for agents** (e.g. Microsoft's Fides, `arXiv:2505.23643`):
+- **Information-flow control for agents** (e.g. Microsoft's Fides, [`arXiv:2505.23643`](https://arxiv.org/abs/2505.23643)):
   propagates confidentiality/integrity *labels* through messages, tool calls, and results,
   and enforces deterministically. Powerful and shipped. But labels are assigned at trust
   boundaries and bind to *messages*, not to source-code spans. The dual-use binding is one
@@ -89,7 +89,7 @@ should be described as exactly that.
 - **Does:** bound direct egress of repo content outside the served set; produce an exact,
   deterministic record of what entered context (as opposed to probabilistic NL taint-tracking,
   which is ~0.9-F1 at best).
-- **Does not:** stop denial-feedback / causal side channels (`arXiv:2604.04035`); stop
+- **Does not:** stop denial-feedback / causal side channels ([`arXiv:2604.04035`](https://arxiv.org/abs/2604.04035)); stop
   exfiltration via logs, stdout, or subagents outside the mediated path (the majority of
   real-world leak channels); stop regurgitation from the model's training memory. A span
   boundary mediates the read+egress path and nothing beyond it.

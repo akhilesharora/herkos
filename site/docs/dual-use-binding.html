@@ -141,7 +141,7 @@ func (b Binding) AuthorizePayload(req EgressRequest) Decision {
     <table>
       <thead><tr><th>Work</th><th>What it binds</th><th>How Herkos differs</th></tr></thead>
       <tbody>
-        <tr><td><strong>IFC for agents</strong> (e.g. Microsoft Fides, <code>arXiv:2505.23643</code>)</td><td>confidentiality/integrity <em>labels</em> through messages, tool calls, results</td><td>labels bind to messages; the dual-use binding binds to <code class="mono">(file, line-range)</code> spans, auto-derived from the code graph, no manual labels</td></tr>
+        <tr><td><strong>IFC for agents</strong> (e.g. Microsoft Fides, <a href="https://arxiv.org/abs/2505.23643" rel="noopener"><code>arXiv:2505.23643</code></a>)</td><td>confidentiality/integrity <em>labels</em> through messages, tool calls, results</td><td>labels bind to messages; the dual-use binding binds to <code class="mono">(file, line-range)</code> spans, auto-derived from the code graph, no manual labels</td></tr>
         <tr><td><strong>Signed agent receipts</strong> (Agent Receipts, Vouched KYA-OS, Signet, mcptrust)</td><td>the <em>output</em> envelope of a tool call (method, params, result)</td><td>same primitives (Ed25519, Merkle, JCS), but none signs the <em>input</em> context the model saw</td></tr>
         <tr><td><strong>SLSA / in-toto</strong></td><td>"materials" at repo or artifact granularity</td><td>the input predicate at <em>span</em> granularity</td></tr>
         <tr><td><strong>Outbound allowlists</strong> (HTTP/domain egress)</td><td>agent identity, destination domains, IPs</td><td>binds to the code-span context the model was given</td></tr>
@@ -158,7 +158,7 @@ func (b Binding) AuthorizePayload(req EgressRequest) Decision {
     <h2 id="scope">What it does and does not protect</h2>
     <ul>
       <li><strong>Does:</strong> bound direct egress of repo content outside the served set; produce an exact, deterministic record of what entered context (versus probabilistic NL taint-tracking, which is ~0.9-F1 at best).</li>
-      <li><strong>Does not:</strong> stop denial-feedback / causal side channels (<code>arXiv:2604.04035</code>); stop exfiltration via logs, stdout, or subagents outside the mediated path (the majority of real-world leak channels); stop regurgitation from the model's training memory. A span boundary mediates the read and egress path and nothing beyond it.</li>
+      <li><strong>Does not:</strong> stop denial-feedback / causal side channels (<a href="https://arxiv.org/abs/2604.04035" rel="noopener"><code>arXiv:2604.04035</code></a>); stop exfiltration via logs, stdout, or subagents outside the mediated path (the majority of real-world leak channels); stop regurgitation from the model's training memory. A span boundary mediates the read and egress path and nothing beyond it.</li>
     </ul>
 
     <h2 id="where">Where it is meaningful</h2>
