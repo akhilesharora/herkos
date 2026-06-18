@@ -57,6 +57,7 @@
       <a href="concepts.html">Concepts</a>
       <a href="dual-use-binding.html">The dual-use binding</a>
       <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html">Comparison</a>
       <a href="security.html">Security model</a>
       <div class="grp">Reference</div>
       <a href="cli.html" aria-current="page">CLI reference</a>
@@ -80,7 +81,7 @@
         <tr><td><a href="#select"><code>select</code></a></td><td>Print the minimal span set for a query (the served set).</td></tr>
         <tr><td><a href="#scan"><code>scan</code></a></td><td>Audit an MCP config and emit a security receipt.</td></tr>
         <tr><td><a href="#status"><code>status</code></a></td><td>Show the current state.</td></tr>
-        <tr><td><a href="#receipt"><code>receipt</code></a></td><td>Verify a saved Merkle receipt file.</td></tr>
+        <tr><td><a href="#receipt"><code>receipt</code></a></td><td>Summarize a saved Merkle receipt file (root, enforcement, span count).</td></tr>
         <tr><td><a href="#verify"><code>verify</code></a></td><td>Verify a receipt or an audit-log chain against a public key.</td></tr>
         <tr><td><a href="#init"><code>init</code></a></td><td>Initialize Herkos in the current setup.</td></tr>
       </tbody>
@@ -159,7 +160,7 @@
     </div>
     <div class="note warn">
       <span class="label">Scope</span>
-      <p>By default the broker gates the tool name of outbound <code>tools/call</code> only: it does not inspect arguments or gate other methods. With a served set pinned (<code>--served-span</code> plus <code>--index</code>) it also blocks arguments carrying verbatim repo lines from outside that set, a userspace tripwire that encoding or paraphrase defeats. See the <a href="security.html">security model</a>.</p>
+      <p>By default the broker gates the tool name of outbound <code>tools/call</code> only: it does not inspect arguments or gate other methods. With a served set pinned (<code>--served-span</code> plus <code>--index</code>) it also blocks arguments carrying repo lines from outside that set (after normalizing case and whitespace, so a reflow or recase trips), a userspace tripwire that encoding or paraphrase still defeats. See the <a href="security.html">security model</a>.</p>
     </div>
 
     <h2 id="index">index</h2>
@@ -226,7 +227,7 @@
     </table>
 
     <h2 id="receipt">receipt</h2>
-    <p>Verify a saved receipt file. Re-checks the signature and the Merkle root with your local key.</p>
+    <p>Summarize a saved receipt file. Prints its Merkle root, enforcement mode, and span count without contacting any service. To cryptographically re-check the signature and root, use <code>herkos verify --pubkey</code>.</p>
     <div class="cmd">
       <pre><span class="c-prompt">$ </span>herkos receipt <span class="c-flag">--file</span> &lt;r.json&gt;</pre>
       <button class="copy-btn" type="button" aria-label="Copy command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy</span></button>
@@ -234,7 +235,7 @@
     <table>
       <thead><tr><th>Flag</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td><code>--file &lt;r.json&gt;</code></td><td>Path to the receipt file to verify.</td></tr>
+        <tr><td><code>--file &lt;r.json&gt;</code></td><td>Path to the receipt file to summarize.</td></tr>
       </tbody>
     </table>
 
@@ -253,7 +254,7 @@
     </table>
     <div class="note">
       <span class="label">receipt vs verify</span>
-      <p><code>receipt</code> re-checks a single Merkle receipt with your local key. <code>verify</code> takes an explicit <code>--pubkey</code>, so a third party can confirm a receipt or audit log without trusting your machine, and it understands the hash-chained <code>serve --receipts</code> log.</p>
+      <p><code>receipt</code> summarizes a single Merkle receipt (root, enforcement, span count) from the file as-is. <code>verify</code> takes an explicit <code>--pubkey</code> and cryptographically re-checks the signature and root, so a third party can confirm a receipt or audit log without trusting your machine, and it understands the hash-chained <code>serve --receipts</code> log.</p>
     </div>
 
     <h2 id="init">init</h2>

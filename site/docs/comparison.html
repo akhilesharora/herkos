@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comparison - Herkos</title>
+<meta name="description" content="An honest field map: where Herkos sits against Pipelock, capgate, mcp-spine, mcp-scan, srt, Signet, and AgentMint on three axes - decision, enforcement, evidence.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d1320">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="Herkos home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="14" fill="#111829" stroke="#2a3550" stroke-width="2"/>
+        <g fill="none" stroke="url(#hg)" stroke-linecap="round">
+          <path d="M14 22 A 18 18 0 0 1 50 22" stroke-width="3" opacity="0.45"/>
+          <path d="M19 30 A 13 13 0 0 1 45 30" stroke-width="3" opacity="0.7"/>
+          <path d="M24 38 A 8 8 0 0 1 40 38" stroke-width="3"/></g>
+        <circle cx="32" cy="46" r="4.4" fill="url(#hg)"/>
+      </svg>
+      <span class="word">Herkos</span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="index.html">Docs</a>
+      <a href="security.html">Security</a>
+      <a class="gh" href="https://github.com/akhilesharora/herkos" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub</a>
+      <a class="cta" href="quickstart.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="docs" id="main">
+  <aside class="docs-side">
+    <button class="docs-side-toggle" aria-expanded="false">
+      <span>On this site</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav aria-label="Documentation">
+      <div class="grp">Start here</div>
+      <a href="index.html">Overview</a>
+      <a href="install.html">Install</a>
+      <a href="quickstart.html">Quickstart</a>
+      <div class="grp">Understand</div>
+      <a href="concepts.html">Concepts</a>
+      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html" aria-current="page">Comparison</a>
+      <a href="security.html">Security model</a>
+      <div class="grp">Reference</div>
+      <a href="cli.html">CLI reference</a>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+    <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Comparison</div>
+    <h1>Comparison</h1>
+    <p class="page-lede">An honest map. Herkos occupies one position no shipping tool here occupies, and concedes every other lane to more mature tools. This page makes both halves explicit.</p>
+
+    <h2 id="distinct">The one position no profiled shipping tool occupies</h2>
+    <p><strong>Context-derived egress.</strong> The minimal code-graph context the agent is served <em>is</em> the egress allowlist: a single <code>core.Binding</code> is the only value both the serve path and the egress gate read, so "what may leave" and "what was read in" cannot drift apart. The signed audit receipt commits a fingerprint of that served context, so it proves the brokered calls happened under that exact binding.</p>
+    <p>No tool surveyed derives its egress decision from the served code context; they decide from traffic content, static policy, or hand-written allowlists. The idea itself is anticipated in the literature (CaMeL, OCELOT, NeuroTaint), so this is novel in a shipping product, not novel in concept.</p>
+
+    <h2 id="matrix">The field on three axes</h2>
+    <p>Each agent-security tool sits on three independent axes: where the allow/deny is computed (<code>decision</code>), where it is applied (<code>enforcement</code>), and what the receipt proves (<code>evidence</code>).</p>
+    <table>
+      <thead><tr><th>Tool</th><th>decision</th><th>enforcement</th><th>evidence</th><th>vs Herkos</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Herkos</strong></td><td>context-derived (served span set)</td><td>mcp_proxy + Linux netns</td><td>ed25519 hash-chain, offline-verifiable, binds served context</td><td>the wedge; everything else below is more mature in its lane</td></tr>
+        <tr><td>Pipelock</td><td>network_mediator (content scan)</td><td>http/ws/mcp proxy + kernel sandbox</td><td>ed25519, 2 spec'd formats, 4 verifiers, conformance suite</td><td>strict superset on receipts, coverage, sandbox</td></tr>
+        <tr><td>capgate</td><td>scanner (compile-time)</td><td>emits bwrap/docker/nftables config</td><td>unsigned manifest hash</td><td>stronger per-host egress allowlist; no runtime, no signed audit</td></tr>
+        <tr><td>mcp-spine</td><td>in_runtime proxy</td><td>mcp_proxy</td><td>symmetric HMAC (not offline-verifiable)</td><td>more features; audit is not third-party verifiable; no egress control</td></tr>
+        <tr><td>Invariant/Snyk mcp-scan</td><td>scanner</td><td>pre-connect / mcp_proxy</td><td>runtime log</td><td>broader config/tool-definition risk scan</td></tr>
+        <tr><td>srt (Claude Code sandbox)</td><td>network_mediator</td><td>OS sandbox (Seatbelt/bubblewrap)</td><td>none</td><td>real cross-platform sandbox + domain allowlist; no audit, no broker</td></tr>
+        <tr><td>Signet</td><td>external_service (MCP proxy)</td><td>mcp_proxy</td><td>ed25519, bilateral co-signed receipts + audit chain</td><td>also signs every tools/call in-path; bilateral co-sign Herkos lacks; no egress or content gate, no context binding</td></tr>
+        <tr><td>AgentMint</td><td>in_runtime (decorator)</td><td>tool_adapter</td><td>ed25519, open AERF spec + JSON Schema + Go verifier</td><td>open receipt spec and reference verifier Herkos lacks; in-process, no egress control</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="concedes">What Herkos concedes</h2>
+    <ul>
+      <li><strong>Signed receipts.</strong> The lane has several incumbents. Pipelock ships a strict superset (two versioned formats, JCS canonicalization, Go/TS/Rust/Python verifiers, a conformance suite); Signet signs every <code>tools/call</code> through an MCP proxy with bilateral co-signed receipts; AgentMint publishes an open receipt spec (AERF) with a Go reference verifier. Herkos has one format and one verifier.</li>
+      <li><strong>Egress isolation.</strong> srt, CAPSEM, agentsh, capgate, and Pipelock enforce at a harder boundary (hardware VM, kernel seccomp/eBPF/Landlock, in-kernel nftables). Herkos's <code>serve --isolate</code> is a single unprivileged Linux netns.</li>
+      <li><strong>Content inspection.</strong> mcp-scan and Pipelock do real DLP and injection detection. Herkos's content gate is a case- and whitespace-normalized line tripwire, defeatable by paraphrase, encoding, or splitting a line across calls.</li>
+      <li><strong>Maturity.</strong> Pipelock (CNCF-listed), srt and AGT (~4.4k stars), mcp-scan (Snyk, ~2.6k) are all more mature than Herkos.</li>
+    </ul>
+
+    <h2 id="true">What is true and battle-tested today</h2>
+    <ul>
+      <li><code>herkos serve</code> brokers a real MCP server (<code>@modelcontextprotocol/server-everything</code>) deny-by-default; a non-allowlisted tool is answered with a JSON-RPC error in-path and the session continues.</li>
+      <li>The audit receipt is ed25519-signed, sha256 hash-chained, and offline-verifiable with only the public key; it commits the served-context fingerprint; an edit, a truncation, a flipped context byte, or a wrong key all fail <code>herkos verify</code>.</li>
+      <li><code>herkos scan</code> audits an MCP config for unbrokered, unpinned-install, over-scoped, poisoned (drift against a baseline), unrestricted-egress, and remote servers.</li>
+    </ul>
+
+    <div class="note">
+      <span class="label">Claims this project will not make</span>
+      <p>Checkable-false, so absent here by design: "first or only to bind context to egress" (the literature predates it); "strongest or most complete signed receipt"; "best egress isolation or sandbox"; "blocks data exfiltration" (the tripwire does not); "enforces a network-destination allowlist" (the netns is all-or-nothing); "cross-platform"; "more mature or more battle-tested than the field".</p>
+    </div>
+  </main>
+</div>
+
+<script src="../main.js"></script>
+</body>
+</html>

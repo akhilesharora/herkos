@@ -57,6 +57,7 @@
       <a href="concepts.html">Concepts</a>
       <a href="dual-use-binding.html">The dual-use binding</a>
       <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html">Comparison</a>
       <a href="security.html" aria-current="page">Security model</a>
       <div class="grp">Reference</div>
       <a href="cli.html">CLI reference</a>
@@ -96,6 +97,42 @@
       <li><strong>Dual-use egress gate (opt-in).</strong> Pin the spans the model may see with <code>--served-span</code> and Herkos blocks <code>tools/call</code> arguments that carry repo lines from outside that set. Matching normalizes case and whitespace, so a recase or a reflow of a served line still trips it. It is a userspace tripwire on line content, not a sandbox; the published bypass below says exactly what it does not catch.</li>
     </ul>
 
+    <p>The broker sits between the agent and the upstream server, gates each <code>tools/call</code> deny-by-default, and records every brokered call to a signed, hash-chained log:</p>
+<!-- ===== DIAGRAM B: broker data path (the runtime) ===== -->
+<div class="diagram" style="margin: 28px 0;">
+  <svg viewBox="0 0 920 300" role="img" aria-label="Broker data path: the agent's tool calls pass through herkos serve, which gates them deny-by-default and forwards allowed calls to the upstream MCP server; every brokered call is written to a signed, hash-chained, context-bound audit log that herkos verify checks offline.">
+    <defs>
+      <linearGradient id="dB" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+      <marker id="dBa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6366f1"/></marker>
+      <marker id="dBt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2dd4bf"/></marker>
+    </defs>
+    <g><rect x="20" y="44" width="150" height="60" rx="11" fill="#1a2336" stroke="#394763"/>
+      <text x="95" y="70" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">agent</text>
+      <text x="95" y="89" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">any MCP client</text></g>
+    <g><rect x="330" y="28" width="210" height="92" rx="12" fill="#161e30" stroke="url(#dB)" stroke-width="1.5"/>
+      <text x="435" y="58" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">herkos serve</text>
+      <text x="435" y="80" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#aab4c2">deny-by-default tool gate</text>
+      <text x="435" y="97" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#aab4c2">+ content tripwire</text></g>
+    <g><rect x="710" y="44" width="190" height="60" rx="11" fill="#1a2336" stroke="#394763"/>
+      <text x="805" y="70" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">upstream MCP server</text>
+      <text x="805" y="89" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">possibly untrusted</text></g>
+    <g><rect x="330" y="206" width="210" height="66" rx="11" fill="#1f2940" stroke="url(#dB)" stroke-width="1.5"/>
+      <text x="435" y="234" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#2dd4bf">signed audit log</text>
+      <text x="435" y="253" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#aab4c2">hash-chained, context-bound</text></g>
+    <g><rect x="650" y="206" width="210" height="66" rx="11" fill="#1a2336" stroke="#394763"/>
+      <text x="755" y="234" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">herkos verify</text>
+      <text x="755" y="253" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">offline, public key only</text></g>
+    <line x1="170" y1="74" x2="324" y2="74" stroke="url(#dB)" stroke-width="2" marker-end="url(#dBa)"/>
+    <text x="247" y="65" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">tools/call</text>
+    <line x1="540" y1="74" x2="704" y2="74" stroke="url(#dB)" stroke-width="2" marker-end="url(#dBa)"/>
+    <text x="625" y="65" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#2dd4bf">allowed: forwarded</text>
+    <text x="625" y="94" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#f87171">denied: blocked in-path</text>
+    <line x1="435" y1="120" x2="435" y2="200" stroke="#2dd4bf" stroke-width="2" marker-end="url(#dBt)"/>
+    <text x="500" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">every call</text>
+    <line x1="540" y1="239" x2="644" y2="239" stroke="url(#dB)" stroke-width="2" marker-end="url(#dBa)"/>
+  </svg>
+</div>
+
     <h2 id="bypass">The published bypass</h2>
     <p>Here is exactly how to get data past v1's in-path broker. We publish it because you should know the boundary before you lean on it.</p>
 
@@ -127,6 +164,39 @@
         <b>State it plainly:</b> the userspace broker gives you deny-by-default tool control plus a signed audit trail, not a kernel-enforced seal on arbitrary egress. <code>serve --isolate</code> adds a real kernel boundary for stdio-only servers; per-destination egress control for servers that need their own network is still coming.
       </div>
     </div>
+
+    <p>What the audit log does hold up against: every brokered call is signed and hash-chained as it is written, and any tampered byte fails <code>herkos verify</code> offline with only the public key.</p>
+<!-- ===== DIAGRAM C: receipt life cycle (sign -> verify -> tamper) ===== -->
+<div class="diagram" style="margin: 28px 0;">
+  <svg viewBox="0 0 920 250" role="img" aria-label="Receipt life cycle: every brokered call is ed25519-signed and hash-chained into an audit log; herkos verify confirms it offline with only the public key, and any tampered byte fails verification.">
+    <defs>
+      <linearGradient id="dC" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+      <marker id="dCa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6366f1"/></marker>
+      <marker id="dCx" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f87171"/></marker>
+    </defs>
+    <g><rect x="20" y="40" width="170" height="62" rx="11" fill="#1a2336" stroke="#394763"/>
+      <text x="105" y="68" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">brokered call</text>
+      <text x="105" y="87" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">tool, req hash, decision</text></g>
+    <g><rect x="280" y="34" width="200" height="74" rx="12" fill="#161e30" stroke="url(#dC)" stroke-width="1.5"/>
+      <text x="380" y="62" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#2dd4bf">ed25519 + hash chain</text>
+      <text x="380" y="83" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#aab4c2">prev hash links each record</text></g>
+    <g><rect x="570" y="40" width="180" height="62" rx="11" fill="#1f2940" stroke="url(#dC)" stroke-width="1.5"/>
+      <text x="660" y="68" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">signed audit log</text>
+      <text x="660" y="87" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">a record you hold</text></g>
+    <g><rect x="570" y="160" width="180" height="60" rx="11" fill="#1a2336" stroke="#394763"/>
+      <text x="660" y="186" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#2dd4bf">VERIFIED</text>
+      <text x="660" y="205" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">offline, public key only</text></g>
+    <g><rect x="790" y="160" width="110" height="60" rx="11" fill="#1a2336" stroke="#5b2030"/>
+      <text x="845" y="186" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#f87171">FAILED</text>
+      <text x="845" y="205" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#a88">one byte off</text></g>
+    <line x1="190" y1="71" x2="274" y2="71" stroke="url(#dC)" stroke-width="2" marker-end="url(#dCa)"/>
+    <line x1="480" y1="71" x2="564" y2="71" stroke="url(#dC)" stroke-width="2" marker-end="url(#dCa)"/>
+    <line x1="660" y1="102" x2="660" y2="154" stroke="url(#dC)" stroke-width="2" marker-end="url(#dCa)"/>
+    <text x="725" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">herkos verify</text>
+    <path d="M750 190 L 786 190" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#dCx)" stroke-dasharray="4 4"/>
+    <text x="768" y="180" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" fill="#f87171">tamper</text>
+  </svg>
+</div>
 
     <h2 id="roadmap">What closes the gap</h2>
     <p>The gaps above are not permanent; they are the next work. Two things close most of them:</p>

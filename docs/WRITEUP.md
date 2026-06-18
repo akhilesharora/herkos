@@ -25,10 +25,11 @@ All pure Go, tested under the race detector, fuzzed, lint-clean:
 
 - An in-path **stdio MCP broker** with a deny-by-default tool-name allowlist (a `tools/call` to
   a tool you did not allow gets a hard error in-path; the session keeps running).
-- A **content tripwire**: with a served set pinned, verbatim repo lines from outside it are
-  blocked on the way to a tool call.
+- A **content tripwire**: with a served set pinned, repo lines from outside it are blocked on
+  the way to a tool call, after normalizing case and whitespace (so a reflow or recase still
+  trips it; base64, paraphrase, or splitting a line across calls still pass).
 - A **signed, hash-chained, offline-verifiable audit log** of every brokered call, fail-closed.
-- Unprivileged **kernel network-namespace egress isolation** (`serve --isolate`).
+- An unprivileged **Linux network namespace with no route out** (`serve --isolate`).
 - `herkos scan`: structural hygiene for an MCP config (unpinned, unbrokered, over-scoped,
   baseline-drift, remote).
 
@@ -55,15 +56,18 @@ Three of the four pillars are commodity:
 - **Signed offline-verifiable receipts** ship in open-source **Pipelock** (Go, Ed25519 + hash
   chain + a non-Go verifier, covering MCP stdio *and* HTTP) and in patented AGA, and are
   standardized in an MCP extension (arXiv:2605.24248).
-- **Admission scanning** is Snyk's / Invariant's `mcp-scan`, which detects the tool-poisoning
-  Herkos's scan does not.
+- **Admission scanning** is Snyk's / Invariant's `mcp-scan`, which detects tool-poisoning by
+  content analysis with no baseline; Herkos's scan only flags tool-description drift against a
+  trusted baseline, so it misses first-seen poisoning.
 
-And the one idea that was mine - the dual-use binding - is real but verbatim-only today (base64
-defeats it) and lives in a stdio broker (the wrong layer; the honest vehicle is a syscall/FUSE
-interceptor). Worse for novelty: the *smart* version, transformation-resistant taint that
-survives encoding, is already published as **NeuroTaint** (arXiv:2604.23374), and bounding exfil
-with certified leakage budgets is **OCELOT** (arXiv:2606.12341). The agent-security field is a
-hyperactive frontier; there were a dozen relevant papers in the last two weeks of arXiv alone.
+And the one idea that was mine - the dual-use binding - is real but a shallow content tripwire
+today: it normalizes case and whitespace (so reflow/recase trip it) but base64, paraphrase, or
+token rewrites defeat it, and it lives in a stdio broker (the wrong layer; the honest vehicle is
+a syscall/FUSE interceptor). Worse for novelty: the *smart* version, transformation-resistant
+taint that survives encoding, is already published as **NeuroTaint** (arXiv:2604.23374), and
+bounding exfil with certified leakage budgets is **OCELOT** (arXiv:2606.12341). The
+agent-security field is a hyperactive frontier; there were a dozen relevant papers in the last
+two weeks of arXiv alone.
 
 ## So what is it good for
 

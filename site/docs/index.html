@@ -57,6 +57,7 @@
       <a href="concepts.html">Concepts</a>
       <a href="dual-use-binding.html">The dual-use binding</a>
       <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html">Comparison</a>
       <a href="security.html">Security model</a>
       <div class="grp">Reference</div>
       <a href="cli.html">CLI reference</a>
@@ -66,11 +67,11 @@
   <main class="docs-main">
     <div class="crumb"><a href="../index.html">Herkos</a> / Docs / Overview</div>
     <h1>Documentation</h1>
-    <p class="page-lede">Herkos is a local-first context and egress broker for AI coding agents. It runs on your machine, in front of the agent you already use, and decides what the model sees and what is allowed to leave.</p>
+    <p class="page-lede">Herkos is a local-first, in-path MCP broker for AI coding agents. It runs on your machine, between the agent and the MCP servers it uses, and gives you deny-by-default control over which tools run and what leaves, with a signed record of every brokered call.</p>
 
     <h2 id="what">What Herkos does</h2>
-    <p>An AI coding agent makes a query, your editor packs up context, and that context goes to a model endpoint. You pay for the tokens, and you have no record of which lines of your code went over the wire. Herkos sits in that path and applies one mechanism to both problems.</p>
-    <p>That mechanism is <strong>SpanGate</strong>. For each query, Herkos's local code graph emits a minimal set of <code>(file, line-range)</code> spans. The same set is both the model's context (fewer tokens) and the egress allowlist (deny-by-default). Every answer ships a signed Merkle receipt of which spans touched the model.</p>
+    <p>Your AI coding agent connects to MCP servers you did not write - GitHub, Slack, a database, the filesystem. Any of them can read your code through a tool call and send it to a backend you do not control, and you get no deny-by-default say over which tools run or a verifiable record of what left. Herkos sits in-path between the agent and those servers and gates every tool call.</p>
+    <p>Its mechanism is <strong>SpanGate</strong>. For each query, Herkos's local code graph emits a minimal set of <code>(file, line-range)</code> spans, and that one set is both the minimal context a query needs and the egress allowlist - one <code>core.Binding</code>, by type invariant. The shipping broker enforces the egress half deny-by-default and signs an offline-verifiable log of every brokered call.</p>
 
     <div class="note">
       <span class="label">The throughline</span>

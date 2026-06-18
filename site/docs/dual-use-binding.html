@@ -57,6 +57,7 @@
       <a href="concepts.html">Concepts</a>
       <a href="dual-use-binding.html" aria-current="page">The dual-use binding</a>
       <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html">Comparison</a>
       <a href="security.html">Security model</a>
       <div class="grp">Reference</div>
       <a href="cli.html">CLI reference</a>
@@ -68,6 +69,37 @@
     <h1>The dual-use binding</h1>
     <p class="page-lede">The one idea behind Herkos: the minimal code context a model is served and the egress allowlist that bounds what it may send should be the <em>same</em> object, computed once. Herkos calls that object a <code>Binding</code>. This page states the idea, separates it from the work it resembles, and says plainly where it holds and where it does not.</p>
 
+    <div class="diagram" style="margin: 28px 0;">
+      <svg viewBox="0 0 920 280" role="img" aria-label="SpanGate: a query goes to the local code graph, which emits one minimal span set; that single set becomes both the model context and the egress allowlist, and every answer ships a signed receipt.">
+        <defs>
+          <linearGradient id="dA" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+          <marker id="dAa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6366f1"/></marker>
+          <marker id="dAt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2dd4bf"/></marker>
+        </defs>
+        <g><rect x="14" y="112" width="150" height="56" rx="11" fill="#1a2336" stroke="#394763"/>
+          <text x="89" y="138" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">query</text>
+          <text x="89" y="156" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">from the agent</text></g>
+        <g><rect x="232" y="96" width="190" height="88" rx="12" fill="#161e30" stroke="url(#dA)" stroke-width="1.5"/>
+          <text x="327" y="128" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">local code graph</text>
+          <text x="327" y="150" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#aab4c2">emits minimal</text>
+          <text x="327" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#2dd4bf">(file, line-range) spans</text></g>
+        <g><rect x="490" y="110" width="120" height="60" rx="11" fill="#1f2940" stroke="url(#dA)" stroke-width="1.5"/>
+          <text x="550" y="135" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">one span</text>
+          <text x="550" y="153" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">set</text></g>
+        <g><rect x="700" y="40" width="206" height="68" rx="11" fill="#1a2336" stroke="#394763"/>
+          <text x="803" y="68" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13.5" fill="#2dd4bf">model context</text>
+          <text x="803" y="88" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">the spans it needs</text></g>
+        <g><rect x="700" y="172" width="206" height="68" rx="11" fill="#1a2336" stroke="#394763"/>
+          <text x="803" y="200" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13.5" fill="#6366f1">egress allowlist</text>
+          <text x="803" y="220" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">deny-by-default</text></g>
+        <line x1="164" y1="140" x2="226" y2="140" stroke="#394763" stroke-width="2" marker-end="url(#dAa)"/>
+        <line x1="422" y1="140" x2="484" y2="140" stroke="url(#dA)" stroke-width="2" marker-end="url(#dAa)"/>
+        <path d="M610 134 C 660 120, 660 80, 696 74" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#dAt)"/>
+        <path d="M610 146 C 660 160, 660 200, 696 206" stroke="#6366f1" stroke-width="2" fill="none" marker-end="url(#dAa)"/>
+        <text x="650" y="150" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">same set</text>
+      </svg>
+    </div>
+
     <h2 id="problem">The problem</h2>
     <p>An AI coding agent reads private source and can also call tools that leave the machine. The usual response bolts on two separate mechanisms: one to trim the context sent to the model, another to police egress. Provenance, "which lines of my code actually went to the model", is then reconstructed after the fact from logs, if at all. The two mechanisms can disagree, and the reconstruction is exactly that.</p>
 
@@ -78,7 +110,7 @@
       <li><strong>the deny-by-default read and egress allowlist</strong> (a payload is authorized only if every source span it derives from is covered by the set; the zero value authorizes nothing);</li>
       <li><strong>the signed input manifest</strong> (the spans are the leaves of an ed25519 Merkle receipt, verifiable offline with only the public key).</li>
     </ol>
-    <p>There is no API that serves one set and enforces another. "Context set == egress set" is a type invariant, not a convention, because both the serve path and the egress authorizer read exactly the same <code>Binding</code>.</p>
+    <p>There is no API that serves one set and enforces another. "Context set == egress set" is a type invariant, not a convention, because both the serve path and the egress authorizer read exactly the same <code>Binding</code>. That invariant is what ships and what is tested: the two halves provably read one value.</p>
     <pre><code>// internal/core: the only value both the serve path and the egress authorizer read.
 type Binding struct{ spans SpanSet }
 
@@ -98,6 +130,11 @@ func (b Binding) AuthorizePayload(req EgressRequest) Decision {
 	return Allow()
 }</code></pre>
 
+    <div class="note warn">
+      <span class="label">Strong form vs what the wire enforces</span>
+      <p><code>AuthorizePayload</code> above is the strong, span-exact form: it needs explicit provenance on each egress request and denies anything outside the bound set. That form is the reference/demo path, not what runs in <code>herkos serve</code>. On the wire the broker has no provenance handed to it, so it enforces the binding as a <strong>content tripwire</strong>: it fingerprints the served spans' lines and blocks a tool-call argument that carries a served-set-outsider line, after normalizing case and whitespace (so a reflow or recase still trips it). Base64, paraphrase, or splitting a line across calls defeat it. The strong form is what the binding <em>is</em>; the tripwire is what a stdio broker can approximate of it today.</p>
+    </div>
+
     <h2 id="prior-art">Why this is not the prior art</h2>
     <p>The pieces look familiar; the combination is not.</p>
     <table>
@@ -110,6 +147,7 @@ func (b Binding) AuthorizePayload(req EgressRequest) Decision {
       </tbody>
     </table>
     <p>The field is output- and traffic-centric: it can assert <em>what flowed</em> and <em>what was called</em>, never <em>what was allowed in</em> bound to <em>what is allowed out</em>. The span set is the only artifact organized around the input set, and binding it to egress upgrades it from a log to a boundary.</p>
+    <p>To be clear about what is and is not new here: the <em>idea</em> of constraining what an agent does with tainted context, and of taint that survives transformation, is already in the literature - CaMeL, OCELOT, and NeuroTaint all anticipate it. What is distinct is shipping it in a product as a single span-derived object that is at once the served context and the egress allowlist. Novel in a shipping tool, not novel in concept.</p>
 
     <div class="note warn">
       <span class="label">The hard constraint, stated plainly</span>
@@ -131,6 +169,42 @@ func (b Binding) AuthorizePayload(req EgressRequest) Decision {
     <div class="note">
       <span class="label">Status</span>
       <p>Reference implementation in Go: <code>internal/core</code> (<code>Binding</code>, <code>SpanSet</code>), the SpanGate pipeline, and ed25519 Merkle receipts (<code>pkg/receipt</code>), with the egress half wired into <code>herkos serve</code> as an opt-in content gate. A reference implementation of the idea.</p>
+    </div>
+
+    <p>On the wire that opt-in gate lives in the broker's data path: every tool call passes through <code>herkos serve</code>, allowed calls are forwarded and denied ones answered in-path, and every brokered call lands in a signed, context-bound audit log that <code>herkos verify</code> checks offline.</p>
+
+    <div class="diagram" style="margin: 28px 0;">
+      <svg viewBox="0 0 920 300" role="img" aria-label="Broker data path: the agent's tool calls pass through herkos serve, which gates them deny-by-default and forwards allowed calls to the upstream MCP server; every brokered call is written to a signed, hash-chained, context-bound audit log that herkos verify checks offline.">
+        <defs>
+          <linearGradient id="dB" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+          <marker id="dBa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6366f1"/></marker>
+          <marker id="dBt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2dd4bf"/></marker>
+        </defs>
+        <g><rect x="20" y="44" width="150" height="60" rx="11" fill="#1a2336" stroke="#394763"/>
+          <text x="95" y="70" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">agent</text>
+          <text x="95" y="89" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">any MCP client</text></g>
+        <g><rect x="330" y="28" width="210" height="92" rx="12" fill="#161e30" stroke="url(#dB)" stroke-width="1.5"/>
+          <text x="435" y="58" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#e7ecf3">herkos serve</text>
+          <text x="435" y="80" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#aab4c2">deny-by-default tool gate</text>
+          <text x="435" y="97" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11.5" fill="#aab4c2">+ content tripwire</text></g>
+        <g><rect x="710" y="44" width="190" height="60" rx="11" fill="#1a2336" stroke="#394763"/>
+          <text x="805" y="70" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">upstream MCP server</text>
+          <text x="805" y="89" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">possibly untrusted</text></g>
+        <g><rect x="330" y="206" width="210" height="66" rx="11" fill="#1f2940" stroke="url(#dB)" stroke-width="1.5"/>
+          <text x="435" y="234" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#2dd4bf">signed audit log</text>
+          <text x="435" y="253" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#aab4c2">hash-chained, context-bound</text></g>
+        <g><rect x="650" y="206" width="210" height="66" rx="11" fill="#1a2336" stroke="#394763"/>
+          <text x="755" y="234" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#e7ecf3">herkos verify</text>
+          <text x="755" y="253" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">offline, public key only</text></g>
+        <line x1="170" y1="74" x2="324" y2="74" stroke="url(#dB)" stroke-width="2" marker-end="url(#dBa)"/>
+        <text x="247" y="65" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#7b8694">tools/call</text>
+        <line x1="540" y1="74" x2="704" y2="74" stroke="url(#dB)" stroke-width="2" marker-end="url(#dBa)"/>
+        <text x="625" y="65" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#2dd4bf">allowed: forwarded</text>
+        <text x="625" y="94" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#f87171">denied: blocked in-path</text>
+        <line x1="435" y1="120" x2="435" y2="200" stroke="#2dd4bf" stroke-width="2" marker-end="url(#dBt)"/>
+        <text x="500" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">every call</text>
+        <line x1="540" y1="239" x2="644" y2="239" stroke="url(#dB)" stroke-width="2" marker-end="url(#dBa)"/>
+      </svg>
     </div>
 
     <div class="docs-foot">

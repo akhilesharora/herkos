@@ -57,6 +57,7 @@
       <a href="concepts.html">Concepts</a>
       <a href="dual-use-binding.html">The dual-use binding</a>
       <a href="case-studies.html">Case studies</a>
+      <a href="comparison.html">Comparison</a>
       <a href="security.html">Security model</a>
       <div class="grp">Reference</div>
       <a href="cli.html">CLI reference</a>
@@ -155,12 +156,12 @@
         <span class="lbl">Copy</span>
       </button>
     </div>
-    <p>The scan emits a receipt like this:</p>
+    <p>The scan prints a one-line summary like this:</p>
     <div class="terminal">
       <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="title">herkos scan</span></div>
 <pre aria-label="herkos scan output"><span class="c-dim">herkos scan:</span> <span class="c-ok">0</span> over-scoped tools, <span class="c-ok">0</span> poisoned tool-descriptions, <span class="c-warn">1</span> servers with unrestricted egress - your code never left this machine</pre>
     </div>
-    <p>Verify a saved receipt file at any time:</p>
+    <p>The scan summary is a status line, not a signed file. The Merkle span receipt is a different artifact, the JSON written on the <code>select</code> path that records which spans touched the model. <code>herkos receipt</code> summarizes one of those, printing its root, enforcement mode, and span count:</p>
     <div class="cmd">
       <pre><span class="c-prompt">$ </span>herkos receipt <span class="c-flag">--file</span> receipt.json</pre>
       <button class="copy-btn" type="button" aria-label="Copy command">
@@ -168,6 +169,7 @@
         <span class="lbl">Copy</span>
       </button>
     </div>
+    <p>To check a receipt or an audit log cryptographically against a public key, use <code>herkos verify --pubkey</code> (shown above). It is the only command that verifies a signature.</p>
 
     <div class="note warn">
       <span class="label">Know what you are getting</span>

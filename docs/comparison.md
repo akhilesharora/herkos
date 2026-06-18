@@ -20,10 +20,12 @@ Each agent-security tool sits on three independent axes: where the allow/deny is
 | mcp-spine | in_runtime proxy | mcp_proxy | symmetric HMAC (not offline-verifiable) | more features; audit is not third-party verifiable; no egress control |
 | Invariant/Snyk mcp-scan | scanner | pre-connect / mcp_proxy | runtime log | broader config/tool-definition risk scan |
 | srt (Claude Code sandbox) | network_mediator | OS sandbox (Seatbelt/bubblewrap) | none | real cross-platform sandbox + domain allowlist; no audit, no broker |
+| Signet | external_service (MCP proxy) | mcp_proxy | ed25519, bilateral co-signed receipts + audit chain | also signs every tools/call in-path; bilateral co-sign Herkos lacks; no egress or content gate, no context binding |
+| AgentMint | in_runtime (decorator) | tool_adapter | ed25519, open AERF spec + JSON Schema + Go verifier | open receipt spec and reference verifier Herkos lacks; in-process, no egress control |
 
 ## What Herkos concedes
 
-- **Signed receipts:** Pipelock ships a strict superset (two versioned formats, JCS canonicalization, Go/TS/Rust/Python verifiers, a conformance suite). Herkos has one format and one verifier.
+- **Signed receipts:** the lane has several incumbents. Pipelock ships a strict superset (two versioned formats, JCS canonicalization, Go/TS/Rust/Python verifiers, a conformance suite); Signet signs every `tools/call` through an MCP proxy with bilateral co-signed receipts; AgentMint publishes an open receipt spec (AERF) with a Go reference verifier. Herkos has one format and one verifier.
 - **Egress isolation:** srt, CAPSEM, agentsh, capgate, and Pipelock enforce at a harder boundary (hardware VM, kernel seccomp/eBPF/Landlock, in-kernel nftables). Herkos's `serve --isolate` is a single unprivileged Linux netns.
 - **Content inspection:** mcp-scan and Pipelock do real DLP and injection detection. Herkos's content gate is a case- and whitespace-normalized verbatim tripwire, defeatable by paraphrase or encoding.
 - **Maturity:** Pipelock (CNCF-listed), srt and AGT (~4.4k stars), mcp-scan (Snyk, ~2.6k) are all more mature than Herkos.

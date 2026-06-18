@@ -20,6 +20,31 @@ only value both the serve path and the egress authorizer read, so "the context s
 egress set are identical" is a type invariant, not a convention. Every answer ships a signed
 Merkle receipt, verifiable offline by a third party with only the public key.
 
+```
+  query
+    |
+    v
+  [ local tree-sitter code graph ]  ->  one core.Binding (a minimal span set)
+                                              |
+                      the SAME Binding is used as both, by type invariant:
+                        |                                          |
+               context to the model                       egress allowlist
+               (fewer tokens in)                          (only these leave)
+                                              |
+                                              v
+                             signed, offline-verifiable receipt
+```
+
+The live broker (`herkos serve`) enforces that same set on the wire:
+
+```
+  agent  <->  herkos serve  <->  upstream MCP server
+                   |
+       deny-by-default tool gate + content tripwire
+                   |
+       signed, hash-chained, context-bound audit log
+```
+
 ## What works
 The pure-Go SpanGate core (SELECT -> Binding -> canonicalize -> pool -> signed receipt, with
 the dual-use leak provably blocked), the tree-sitter parser (Go/TS/Python), the on-disk index,
@@ -85,7 +110,8 @@ against real 2025 MCP incidents) found:
 So Herkos stands as a reference implementation of the idea and the engineering - SpanGate's
 dual-use invariant and verifiable receipts, done cleanly.
 
-The one genuinely novel idea, written up honestly (what it is, why it differs from IFC and
+The one idea that is novel in a shipping product (the concept itself is anticipated in the
+research: CaMeL, OCELOT, NeuroTaint), written up honestly (what it is, why it differs from IFC and
 signed-receipt work, and exactly where it holds and does not), is in
 [`DUAL-USE-BINDING.md`](docs/DUAL-USE-BINDING.md). The honest field map, on three axes against
 Pipelock, capgate, mcp-spine, mcp-scan, and srt, is in [`comparison.md`](docs/comparison.md).
@@ -107,7 +133,7 @@ JSON-RPC error; the agent's session keeps running.
 
 ```
 # Optional: arm the content gate. Build an index, then pin the spans the model may see.
-# A tool-call argument carrying a verbatim repo line from outside auth.go:1-40 is blocked.
+# A tool-call argument carrying a repo line from outside auth.go:1-40 is blocked (normalized match).
 herkos index .
 herkos serve --allow-tool post_message --index .herkos/index --served-span auth.go:1-40 \
   -- npx -y @some/mcp-server
