@@ -4,7 +4,7 @@
 // repo lines in a tools/call's arguments (via a [Lexicon] built from the code-graph index)
 // and denies the call if it carries a repo line whose every containing span lies outside
 // the binding - i.e. un-served code trying to leave. Lines are matched after a shallow
-// normalization (see normalize): Unicode NFC, lowercase, and whitespace-run collapse, so a
+// normalization (see normalize): lowercase and whitespace-run collapse, so a
 // trivial reflow or recase of a served line does not slip past a byte-verbatim match.
 //
 // Honesty, stated plainly so nothing is mistaken for a wall it is not:
@@ -35,8 +35,6 @@ import (
 	"encoding/json"
 	"strings"
 	"unicode"
-
-	"golang.org/x/text/unicode/norm"
 
 	"github.com/akhilesharora/herkos/internal/core"
 )
@@ -123,8 +121,7 @@ func (l *Lexicon) Size() int {
 }
 
 // normalize folds away the trivial line edits that would otherwise let a reflow or recase
-// slip a repo line past a byte-verbatim match. It applies, in order: Unicode NFC (so a
-// precomposed char and its combining-sequence twin compare equal), lowercase, collapse of
+// slip a repo line past a byte-verbatim match. It applies, in order: lowercase, collapse of
 // every run of whitespace to a single ASCII space, and a trim of leading/trailing space.
 // It is applied to both sides of every comparison (lines entering the lexicon and outbound
 // candidate lines), so the match is normalized-vs-normalized.
@@ -134,7 +131,6 @@ func (l *Lexicon) Size() int {
 // states. Widening normalization further (e.g. stripping all whitespace, or token folding)
 // would start matching unrelated prose and turn the tripwire into a false-positive source.
 func normalize(s string) string {
-	s = norm.NFC.String(s)
 	s = strings.ToLower(s)
 	s = strings.Join(strings.Fields(s), " ")
 	return s
