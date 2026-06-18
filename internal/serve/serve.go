@@ -14,6 +14,7 @@ import (
 
 	"github.com/akhilesharora/herkos/internal/adapters/egress/mcpguard"
 	"github.com/akhilesharora/herkos/internal/adapters/egress/spanguard"
+	"github.com/akhilesharora/herkos/internal/adapters/egress/toolfilter"
 	"github.com/akhilesharora/herkos/internal/adapters/transport/mcpstdio"
 	"github.com/akhilesharora/herkos/internal/broker"
 	"github.com/akhilesharora/herkos/internal/core"
@@ -69,6 +70,12 @@ func Run(ctx context.Context, cfg Config, agentR io.Reader, agentW io.Writer, up
 		g.guards = append(g.guards, spanguard.New(cfg.ServedBinding, cfg.Lexicon))
 	}
 	b := broker.NewGuarded(agent, upstream, g)
+	// Trim the agent's view of tools/list to the allowlist so it never loads the schema of a
+	// tool it could not call, cutting tool-catalog tokens at session start. Only when a tool
+	// allowlist is set; deny-all (no AllowedTools) leaves the list untouched.
+	if len(cfg.AllowedTools) > 0 {
+		b.SetResponseFilter(toolfilter.New(cfg.AllowedTools...))
+	}
 	if cfg.Recorder != nil {
 		b.SetRecorder(cfg.Recorder)
 	}

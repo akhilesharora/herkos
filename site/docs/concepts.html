@@ -160,7 +160,7 @@
 </div>
 
     <h2 id="modes">Enforcement modes</h2>
-    <p>At runtime the broker sits between the agent and the upstream MCP server: it gates each <code>tools/call</code> deny-by-default, forwards allowed calls untouched, and records every brokered call to the signed log. How strictly egress is enforced beyond that comes in layers. Be clear about which you are running.</p>
+    <p>At runtime the broker sits between the agent and the upstream MCP server: it gates each <code>tools/call</code> deny-by-default, forwards allowed calls untouched, and records every brokered call to the signed log. It also trims the <code>tools/list</code> the agent loads to the allowlist, so the agent never loads the schema of a tool it cannot call - fewer tool-catalog tokens at session start, and a smaller surface. How strictly egress is enforced beyond that comes in layers. Be clear about which you are running.</p>
 
     <!-- ===== DIAGRAM B: broker data path (the runtime) ===== -->
 <div class="diagram" style="margin: 28px 0;">

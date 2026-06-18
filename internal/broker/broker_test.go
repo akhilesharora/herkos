@@ -458,3 +458,37 @@ func bytesEqual(a, b []byte) bool {
 	}
 	return true
 }
+
+// stubFilter rewrites every upstream-to-agent message through replace, proving the broker
+// applies a ResponseFilter in pumpToAgent.
+type stubFilter struct{ replace func([]byte) []byte }
+
+func (s stubFilter) Filter(msg []byte) []byte { return s.replace(msg) }
+
+func TestResponseFilterRewritesUpstreamToAgent(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	agentEnd, agentPeer := newLink(1)
+	upstreamEnd, upstreamPeer := newLink(1)
+	br := New(agentEnd, upstreamEnd)
+	br.SetResponseFilter(stubFilter{func(b []byte) []byte { return append([]byte("filtered:"), b...) }})
+
+	done := make(chan error, 1)
+	go func() { done <- br.Run(ctx) }()
+
+	if err := upstreamPeer.Send(ctx, []byte("hello")); err != nil {
+		t.Fatalf("upstream send: %v", err)
+	}
+	got, err := agentPeer.Recv(ctx)
+	if err != nil {
+		t.Fatalf("agent recv: %v", err)
+	}
+	if string(got) != "filtered:hello" {
+		t.Fatalf("agent should receive the filtered message, got %q", got)
+	}
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatalf("Run returned: %v", err)
+	}
+}

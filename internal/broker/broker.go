@@ -1,7 +1,8 @@
 // Package broker sits in-path between an agent-side transport and an upstream
 // MCP-server transport, pumping framed messages in both directions.
 //
-// The upstream-to-agent direction is always pure passthrough. The agent-to-upstream
+// The upstream-to-agent direction is passthrough, save for an optional [ResponseFilter]
+// that can trim a tools/list response to the allowlist. The agent-to-upstream
 // direction (the egress direction: bytes leaving toward a possibly-untrusted server)
 // can be governed by an optional [Guard]. With no guard the broker is pure plumbing;
 // with a guard, an outbound message the guard rejects is NOT forwarded - the broker
@@ -48,6 +49,7 @@ type Broker struct {
 	upstream ports.TransportPort
 	guard    Guard
 	recorder Recorder
+	filter   ResponseFilter
 
 	// agentMu serializes writes to the agent transport. Once a guard is in play the
 	// agent end is written by two goroutines - the upstream->agent pump and the
@@ -79,6 +81,20 @@ type Recorder interface {
 // SetRecorder attaches an audit Recorder. It must be called before [Broker.Run]. A nil
 // recorder (the default) means no audit log is written.
 func (b *Broker) SetRecorder(r Recorder) { b.recorder = r }
+
+// ResponseFilter optionally rewrites an upstream-to-agent message before it reaches the
+// agent. It is used to trim a tools/list response down to the allowlist so the agent never
+// loads the schema of a tool it could not call; a nil filter (the default) passes every
+// message through unchanged. Like [Guard] and [Recorder], it is defined here so the broker
+// depends on no concrete package, and it never blocks a message - the egress Guard does that.
+type ResponseFilter interface {
+	Filter(msg []byte) []byte
+}
+
+// SetResponseFilter attaches an upstream-to-agent filter. It must be called before
+// [Broker.Run]. A nil filter (the default) means the upstream-to-agent direction is
+// unchanged passthrough.
+func (b *Broker) SetResponseFilter(f ResponseFilter) { b.filter = f }
 
 // Run pumps messages in both directions - agent to upstream (guarded) and upstream to
 // agent (plain) - until ctx is cancelled or either transport reports io.EOF.
@@ -144,12 +160,16 @@ func (b *Broker) pumpEgress(ctx context.Context) error {
 	}
 }
 
-// pumpToAgent copies messages from the upstream to the agent verbatim.
+// pumpToAgent copies messages from the upstream to the agent, applying the optional
+// [ResponseFilter] first; a nil filter is verbatim passthrough.
 func (b *Broker) pumpToAgent(ctx context.Context) error {
 	for {
 		msg, err := b.upstream.Recv(ctx)
 		if err != nil {
 			return forwardErr(ctx, err)
+		}
+		if b.filter != nil {
+			msg = b.filter.Filter(msg)
 		}
 		if err := b.sendToAgent(ctx, msg); err != nil {
 			return forwardErr(ctx, err)
