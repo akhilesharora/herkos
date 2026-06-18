@@ -16,7 +16,7 @@ func tempChain(t *testing.T) (string, *Chain, ed25519.PublicKey) {
 		t.Fatal(err)
 	}
 	path := filepath.Join(t.TempDir(), "log.jsonl")
-	c, err := Open(path, priv)
+	c, err := Open(path, priv, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,81 @@ func TestOpenRefusesNonEmptyFile(t *testing.T) {
 	if err := os.WriteFile(path, []byte("{}\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Open(path, priv); err == nil {
+	if _, err := Open(path, priv, ""); err == nil {
 		t.Fatal("Open must refuse a non-empty file (one file = one session)")
+	}
+}
+
+func TestContextFingerprintBoundAndVerified(t *testing.T) {
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const fp = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	path := filepath.Join(t.TempDir(), "log.jsonl")
+	c, err := Open(path, priv, fp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Record(call("read_file"), true); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := Verify(read(t, path), pub)
+	if err != nil {
+		t.Fatalf("verify: %v", err)
+	}
+	if !res.Closed {
+		t.Fatalf("got %+v, want cleanly closed", res)
+	}
+	if res.Context != fp {
+		t.Fatalf("Verify exposed context %q, want %q", res.Context, fp)
+	}
+}
+
+func TestContextFingerprintTamperBreaksVerify(t *testing.T) {
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const fp = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	path := filepath.Join(t.TempDir(), "log.jsonl")
+	c, err := Open(path, priv, fp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = c.Record(call("read_file"), true)
+	_ = c.Close()
+
+	data := string(read(t, path))
+	// Flip one hex char of the stored open-record fingerprint. Because the fingerprint is
+	// in the signed canonical bytes, the open record's hash no longer matches its content.
+	tampered := strings.Replace(data, `"context":"deadbeef`, `"context":"feadbeef`, 1)
+	if tampered == data {
+		t.Fatal("setup: nothing tampered (context field not present as expected)")
+	}
+	_, err = Verify([]byte(tampered), pub)
+	if err == nil {
+		t.Fatal("flipping a hex char of the bound context must break verification")
+	}
+	if !strings.Contains(err.Error(), "content does not match hash") {
+		t.Fatalf("want content-mismatch error, got: %v", err)
+	}
+}
+
+func TestEmptyContextVerifies(t *testing.T) {
+	path, c, pub := tempChain(t) // tempChain opens with ""
+	_ = c.Record(call("read_file"), true)
+	_ = c.Close()
+
+	res, err := Verify(read(t, path), pub)
+	if err != nil {
+		t.Fatalf("verify: %v", err)
+	}
+	if res.Context != "" {
+		t.Fatalf("an unarmed chain must report an empty context, got %q", res.Context)
 	}
 }

@@ -57,6 +57,10 @@ type Entry struct {
 	ReqHash string `json:"req_hash,omitempty"`
 	Allowed bool   `json:"allowed"`
 	PubKey  string `json:"pubkey,omitempty"`
+	// Context is the fingerprint of the served code-context set, carried on the open record
+	// only, so the signed audit proves the brokered calls happened under THIS context-egress
+	// binding. Empty when the content gate is not armed.
+	Context string `json:"context,omitempty"`
 	Count   int    `json:"count,omitempty"`
 	Hash    string `json:"hash"`
 	Sig     string `json:"sig"`
@@ -82,6 +86,7 @@ func canonical(e Entry) []byte {
 		b.WriteByte(0)
 	}
 	putStr(&b, e.PubKey)
+	putStr(&b, e.Context)
 	putInt(&b, int64(e.Count))
 	return b.Bytes()
 }
@@ -118,9 +123,11 @@ type Chain struct {
 
 // Open creates the JSONL log at path, refusing to touch a non-empty file (one file = one
 // session, which keeps the chain unambiguous and avoids a second genesis on restart). It mints
-// a random session id and writes the signed genesis record, binding the session and the
-// signer's public key.
-func Open(path string, priv ed25519.PrivateKey) (*Chain, error) {
+// a random session id and writes the signed genesis record, binding the session, the signer's
+// public key, and contextFingerprint - a fingerprint of the served code-context set, so the
+// signed audit proves the brokered calls happened under this context-egress binding. Pass ""
+// when the content gate is not armed.
+func Open(path string, priv ed25519.PrivateKey, contextFingerprint string) (*Chain, error) {
 	if len(priv) != ed25519.PrivateKeySize {
 		return nil, errors.New("receiptlog: invalid signing key")
 	}
@@ -140,7 +147,7 @@ func Open(path string, priv ed25519.PrivateKey) (*Chain, error) {
 	c := &Chain{priv: priv, pub: pub, session: sid, f: f}
 
 	c.mu.Lock()
-	err = c.write(Entry{Type: typeOpen, PubKey: pub})
+	err = c.write(Entry{Type: typeOpen, PubKey: pub, Context: contextFingerprint})
 	c.mu.Unlock()
 	if err != nil {
 		_ = f.Close()
@@ -245,12 +252,14 @@ func (c *Chain) Tip() string { c.mu.Lock(); defer c.mu.Unlock(); return c.prev }
 
 // Result is the outcome of [Verify]: the bound session, the verified call count, whether the
 // chain was cleanly closed (a false here means the log was not sealed - possible truncation),
-// and the tip hash.
+// the tip hash, and the served-context fingerprint bound at open (empty when the content gate
+// was not armed).
 type Result struct {
 	Session string
 	Calls   int
 	Closed  bool
 	Tip     string
+	Context string
 }
 
 // Verify checks a receipt-log against pub, fully offline. It requires a valid genesis (open)
@@ -266,7 +275,7 @@ func Verify(data []byte, pub ed25519.PublicKey) (Result, error) {
 	pubHex := hex.EncodeToString(pub)
 	lines := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
 
-	prev, session := "", ""
+	prev, session, contextFP := "", "", ""
 	seq, calls := 0, 0
 	closed := false
 
@@ -305,6 +314,7 @@ func Verify(data []byte, pub ed25519.PublicKey) (Result, error) {
 				return Result{}, fmt.Errorf("receiptlog: line %d: log is bound to a different key than the one given", i)
 			}
 			session = e.Session
+			contextFP = e.Context
 		case typeCall:
 			if seq == 0 {
 				return Result{}, fmt.Errorf("receiptlog: line %d: first record must be the genesis (open)", i)
@@ -331,7 +341,7 @@ func Verify(data []byte, pub ed25519.PublicKey) (Result, error) {
 	if seq == 0 {
 		return Result{}, errors.New("receiptlog: empty log (no genesis record)")
 	}
-	return Result{Session: session, Calls: calls, Closed: closed, Tip: prev}, nil
+	return Result{Session: session, Calls: calls, Closed: closed, Tip: prev, Context: contextFP}, nil
 }
 
 // hasControl reports whether s contains any control character (notably newline), which must

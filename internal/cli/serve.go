@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,10 +12,12 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/akhilesharora/herkos/internal/core"
 	"github.com/akhilesharora/herkos/internal/keys"
 	"github.com/akhilesharora/herkos/internal/receiptlog"
 	"github.com/akhilesharora/herkos/internal/serve"
@@ -111,7 +115,10 @@ func serveCmd(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			return 1
 		}
 		logPath := filepath.Join(*receiptsDir, fmt.Sprintf("%d.jsonl", time.Now().UnixNano()))
-		chain, err := receiptlog.Open(logPath, priv)
+		// Bind the served-context fingerprint into the signed open record when the content gate
+		// is armed, so the audit proves the brokered calls happened under THIS context-egress
+		// binding. Empty when the gate is inert (the served span set is then the zero set).
+		chain, err := receiptlog.Open(logPath, priv, contextFingerprint(cfg.ServedBinding))
 		if err != nil {
 			fmt.Fprintf(stderr, "serve: audit log: %v\n", err)
 			return 1
@@ -182,4 +189,23 @@ func serveCmd(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+// contextFingerprint hashes the served span set into a stable hex digest to bind into the
+// signed audit's open record. It canonicalizes each span with [core.Span.String] (the same
+// "file:start-end" form `herkos select` prints) and sorts them, so the fingerprint is
+// order-independent and identical across runs over the same served set. A zero (deny-all)
+// binding has no spans and yields "", the unarmed-gate signal.
+func contextFingerprint(b core.Binding) string {
+	spans := b.SpanSet().Spans()
+	if len(spans) == 0 {
+		return ""
+	}
+	lines := make([]string, len(spans))
+	for i, s := range spans {
+		lines[i] = s.String()
+	}
+	sort.Strings(lines)
+	sum := sha256.Sum256([]byte(strings.Join(lines, "\n")))
+	return hex.EncodeToString(sum[:])
 }
