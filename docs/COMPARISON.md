@@ -28,7 +28,7 @@ Each agent-security tool sits on three independent axes: where the allow/deny is
 - **Signed receipts:** the lane has several incumbents. Pipelock ships a strict superset (two versioned formats, JCS canonicalization, Go/TS/Rust/Python verifiers, a conformance suite); Signet signs every `tools/call` through an MCP proxy with bilateral co-signed receipts; AgentMint publishes an open receipt spec (AERF) with a Go reference verifier. Herkos has one format and one verifier.
 - **Egress isolation:** srt, CAPSEM, agentsh, capgate, and Pipelock enforce at a harder boundary (hardware VM, kernel seccomp/eBPF/Landlock, in-kernel nftables). Herkos's `serve --isolate` is a single unprivileged Linux netns.
 - **Content inspection:** mcp-scan and Pipelock do real DLP and injection detection. Herkos's content gate is a case- and whitespace-normalized verbatim tripwire, defeatable by paraphrase or encoding.
-- **Maturity:** Pipelock (CNCF-listed), srt and AGT (~4.4k stars), mcp-scan (Snyk, ~2.6k) are all more mature than Herkos.
+- **Maturity:** Pipelock (CNCF-listed), srt, AGT, and mcp-scan (Snyk) are all more mature than Herkos.
 
 ## What is true and battle-tested today
 
