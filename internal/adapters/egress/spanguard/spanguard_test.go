@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/akhilesharora/herkos/internal/core"
+	"golang.org/x/text/unicode/norm"
 )
 
 // authBody is a small source file the lexicon is built from in these tests. The served
@@ -105,6 +106,43 @@ func TestRecasedLineBlocked(t *testing.T) {
 	recased := "DERIVED := HKDF.Expand(SHA256.New, masterKey, nil)"
 	if allow, _ := g.Check(toolCall(t, "leaking:\n\t"+recased)); allow {
 		t.Fatal("unserved repo line with changed case must be blocked")
+	}
+}
+
+// TestUnicodeFormBlocked is the same class of evasion as reflow and recase: an unserved repo
+// line re-encoded from NFC to NFD is the same visible glyphs with different bytes, so a
+// case/whitespace-only match misses it. normalize must canonicalize Unicode form so the twin
+// still trips. Without the NFC fold the NFD form slips through; this pins that it does not.
+func TestUnicodeFormBlocked(t *testing.T) {
+	// "café" carries a composable char: NFC U+00E9 vs NFD 'e'+U+0301. Files on disk are NFC.
+	const body = "package main\n" +
+		"\n" +
+		"func deriveKey(master []byte) []byte {\n" +
+		"\tcaféSalt := saltFromVault(master, defaultRounds)\n" +
+		"\treturn kdf(master, caféSalt)\n" +
+		"}"
+	unserved := core.Span{File: "kdf.go", StartLine: 3, EndLine: 7}
+	other := core.Span{File: "kdf.go", StartLine: 1, EndLine: 2}
+	lex := NewLexicon(DefaultMinLineLen)
+	lex.AddSpan(unserved, body)
+	ss, err := core.NewSpanSet(other) // the binding serves a different span, so the line is unserved
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := New(core.NewBinding(ss), lex)
+
+	line := "\tcaféSalt := saltFromVault(master, defaultRounds)"
+	// Sanity: the NFC verbatim unserved line is caught.
+	if allow, _ := g.Check(toolCall(t, "out:\n"+line)); allow {
+		t.Fatal("NFC verbatim unserved repo line must be blocked")
+	}
+	// The NFD twin is the same glyphs, different bytes; it must be blocked too.
+	nfd := norm.NFD.String(line)
+	if nfd == line {
+		t.Fatal("test setup: NFD form equals NFC; the line needs a composable char")
+	}
+	if allow, _ := g.Check(toolCall(t, "out:\n"+nfd)); allow {
+		t.Fatal("NFD twin of an unserved repo line bypassed the tripwire")
 	}
 }
 

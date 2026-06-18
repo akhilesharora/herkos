@@ -4,8 +4,9 @@
 // repo lines in a tools/call's arguments (via a [Lexicon] built from the code-graph index)
 // and denies the call if it carries a repo line whose every containing span lies outside
 // the binding - i.e. un-served code trying to leave. Lines are matched after a shallow
-// normalization (see normalize): lowercase and whitespace-run collapse, so a
-// trivial reflow or recase of a served line does not slip past a byte-verbatim match.
+// normalization (see normalize): Unicode NFC, lowercase, and whitespace-run collapse, so a
+// trivial reflow, recase, or Unicode re-encoding of a served line does not slip past a
+// byte-verbatim match.
 //
 // Honesty, stated plainly so nothing is mistaken for a wall it is not:
 //
@@ -37,6 +38,7 @@ import (
 	"unicode"
 
 	"github.com/akhilesharora/herkos/internal/core"
+	"golang.org/x/text/unicode/norm"
 )
 
 // denyCode mirrors mcpguard: -32000 is the JSON-RPC reserved server-error range MCP uses
@@ -120,17 +122,19 @@ func (l *Lexicon) Size() int {
 	return len(l.lines)
 }
 
-// normalize folds away the trivial line edits that would otherwise let a reflow or recase
-// slip a repo line past a byte-verbatim match. It applies, in order: lowercase, collapse of
-// every run of whitespace to a single ASCII space, and a trim of leading/trailing space.
-// It is applied to both sides of every comparison (lines entering the lexicon and outbound
-// candidate lines), so the match is normalized-vs-normalized.
+// normalize folds away the trivial line edits that would otherwise let a reflow, recase, or
+// Unicode re-encoding slip a repo line past a byte-verbatim match. It applies, in order:
+// Unicode NFC (so a precomposed char and its combining-sequence twin compare equal), lowercase,
+// collapse of every run of whitespace to a single ASCII space, and a trim of leading/trailing
+// space. It is applied to both sides of every comparison (lines entering the lexicon and
+// outbound candidate lines), so the match is normalized-vs-normalized.
 //
-// This is deliberately shallow. It defeats whitespace and case evasions only; a paraphrase,
-// a base64/encoding, or any token-level rewrite still passes, exactly as the package doc
-// states. Widening normalization further (e.g. stripping all whitespace, or token folding)
+// This is deliberately shallow. It defeats whitespace, case, and Unicode-form evasions only; a
+// paraphrase, a base64/encoding, or any token-level rewrite still passes, exactly as the package
+// doc states. Widening normalization further (e.g. stripping all whitespace, or token folding)
 // would start matching unrelated prose and turn the tripwire into a false-positive source.
 func normalize(s string) string {
+	s = norm.NFC.String(s) // canonicalize Unicode form so an NFC line and its NFD twin compare equal
 	s = strings.ToLower(s)
 	s = strings.Join(strings.Fields(s), " ")
 	return s
