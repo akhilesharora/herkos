@@ -56,7 +56,7 @@
       <a href="clients.html">Use with your agent</a>
       <div class="grp">Understand</div>
       <a href="concepts.html">Concepts</a>
-      <a href="dual-use-binding.html">The dual-use binding</a>
+      <a href="dual-use-binding.html">Dual-use binding</a>
       <a href="case-studies.html">Case studies</a>
       <a href="comparison.html" aria-current="page">Comparison</a>
       <a href="security.html">Security model</a>
@@ -67,7 +67,7 @@
 
   <main class="docs-main">
     <div class="crumb"><a href="../index.html">Herkos</a> / <a href="index.html">Docs</a> / Comparison</div>
-    <h1>Comparison</h1>
+    <h1 id="comparison">Comparison</h1>
     <p class="page-lede">An honest map. Herkos occupies one position no shipping tool here occupies, and concedes every other lane to more mature tools. This page makes both halves explicit.</p>
 
     <h2 id="distinct">The one position no profiled shipping tool occupies</h2>
@@ -75,18 +75,59 @@
     <p>No tool surveyed derives its egress decision from the served code context; they decide from traffic content, static policy, or hand-written allowlists. The idea itself is anticipated in the literature (CaMeL, OCELOT, NeuroTaint), so this is novel in a shipping product, not novel in concept.</p>
 
     <h2 id="matrix">The field on three axes</h2>
-    <p>Each agent-security tool sits on three independent axes: where the allow/deny is computed (<code>decision</code>), where it is applied (<code>enforcement</code>), and what the receipt proves (<code>evidence</code>).</p>
+    <p>Each agent-security tool sits on three independent axes: where the allow/deny is computed (<code>decision</code>), where it is applied (<code>enforcement</code>), and what the receipt proves (<code>evidence</code>). Plotting decision against evidence shows the shape: Herkos is alone in the <em>context-derived</em> column (the wedge), but shares the signed-offline row - it is distinct on how it decides, not on the receipt itself.</p>
+    <div class="diagram" style="margin: 24px 0;">
+      <svg viewBox="0 0 920 470" role="img" aria-label="Positioning chart. X axis is the decision location from scanner to context-derived; Y axis is evidence strength from none to signed offline-verifiable. Herkos sits alone in the context-derived column at signed-offline, marked with a green check. Pipelock, Signet, and AgentMint share the signed-offline row at other decision locations; mcp-spine, capgate, mcp-scan, and srt sit lower.">
+        <defs>
+          <linearGradient id="cmpg" x1="0" y1="0" x2="920" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+        </defs>
+        <!-- axes -->
+        <line x1="150" y1="360" x2="880" y2="360" stroke="#394763" stroke-width="1.5"/>
+        <line x1="150" y1="70" x2="150" y2="360" stroke="#394763" stroke-width="1.5"/>
+        <text x="515" y="445" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" fill="#aab4c2">decision: where allow / deny is computed</text>
+        <text x="34" y="215" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" fill="#aab4c2" transform="rotate(-90 34 215)">evidence: what the receipt proves</text>
+        <!-- x ticks -->
+        <text x="223" y="384" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">scanner</text>
+        <text x="369" y="384" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">external</text>
+        <text x="515" y="384" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">in-runtime</text>
+        <text x="661" y="384" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">mediator</text>
+        <text x="807" y="384" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10.5" fill="#2dd4bf">context-derived</text>
+        <!-- y ticks -->
+        <text x="142" y="335" text-anchor="end" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">none</text>
+        <text x="142" y="277" text-anchor="end" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">log</text>
+        <text x="142" y="219" text-anchor="end" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">unsigned</text>
+        <text x="142" y="161" text-anchor="end" font-family="ui-monospace, monospace" font-size="10.5" fill="#7b8694">HMAC</text>
+        <text x="142" y="103" text-anchor="end" font-family="ui-monospace, monospace" font-size="10.5" fill="#2dd4bf">signed offline</text>
+        <!-- highlight: the context-derived column Herkos owns -->
+        <line x1="807" y1="70" x2="807" y2="360" stroke="#2dd4bf" stroke-width="1" stroke-dasharray="3 6" opacity="0.45"/>
+        <!-- other tools -->
+        <g fill="#9aa6b6" font-family="ui-monospace, monospace" font-size="11">
+          <circle cx="661" cy="99" r="5" fill="#6366f1"/><text x="661" y="86" text-anchor="middle">Pipelock</text>
+          <circle cx="369" cy="99" r="5" fill="#6366f1"/><text x="369" y="86" text-anchor="middle">Signet</text>
+          <circle cx="515" cy="99" r="5" fill="#6366f1"/><text x="515" y="86" text-anchor="middle">AgentMint</text>
+          <circle cx="515" cy="157" r="5" fill="#7b8694"/><text x="515" y="177" text-anchor="middle">mcp-spine</text>
+          <circle cx="223" cy="215" r="5" fill="#7b8694"/><text x="223" y="235" text-anchor="middle">capgate</text>
+          <circle cx="223" cy="273" r="5" fill="#7b8694"/><text x="223" y="293" text-anchor="middle">mcp-scan</text>
+          <circle cx="661" cy="331" r="5" fill="#7b8694"/><text x="661" y="351" text-anchor="middle">srt</text>
+        </g>
+        <!-- Herkos: alone in the context-derived column, green + check -->
+        <circle cx="807" cy="99" r="11" fill="none" stroke="#2dd4bf" stroke-width="1.5" opacity="0.6"/>
+        <circle cx="807" cy="99" r="6.5" fill="#2dd4bf"/>
+        <path d="M797 78 l4 4 7 -8" stroke="#2dd4bf" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="807" y="124" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" font-weight="700" fill="#2dd4bf">Herkos</text>
+      </svg>
+    </div>
     <table>
       <thead><tr><th>Tool</th><th>decision</th><th>enforcement</th><th>evidence</th><th>vs Herkos</th></tr></thead>
       <tbody>
-        <tr><td><strong>Herkos</strong></td><td>context-derived (served span set)</td><td>mcp_proxy + Linux netns</td><td>ed25519 hash-chain, offline-verifiable, binds served context</td><td>the wedge; everything else below is more mature in its lane</td></tr>
-        <tr><td>Pipelock</td><td>network_mediator (content scan)</td><td>http/ws/mcp proxy + kernel sandbox</td><td>ed25519, 2 spec'd formats, 4 verifiers, conformance suite</td><td>strict superset on receipts, coverage, sandbox</td></tr>
-        <tr><td>capgate</td><td>scanner (compile-time)</td><td>emits bwrap/docker/nftables config</td><td>unsigned manifest hash</td><td>stronger per-host egress allowlist; no runtime, no signed audit</td></tr>
-        <tr><td>mcp-spine</td><td>in_runtime proxy</td><td>mcp_proxy</td><td>symmetric HMAC (not offline-verifiable)</td><td>more features; audit is not third-party verifiable; no egress control</td></tr>
-        <tr><td>Invariant/Snyk mcp-scan</td><td>scanner</td><td>pre-connect / mcp_proxy</td><td>runtime log</td><td>broader config/tool-definition risk scan</td></tr>
-        <tr><td>srt (Claude Code sandbox)</td><td>network_mediator</td><td>OS sandbox (Seatbelt/bubblewrap)</td><td>none</td><td>real cross-platform sandbox + domain allowlist; no audit, no broker</td></tr>
-        <tr><td>Signet</td><td>external_service (MCP proxy)</td><td>mcp_proxy</td><td>ed25519, bilateral co-signed receipts + audit chain</td><td>also signs every tools/call in-path; bilateral co-sign Herkos lacks; no egress or content gate, no context binding</td></tr>
-        <tr><td>AgentMint</td><td>in_runtime (decorator)</td><td>tool_adapter</td><td>ed25519, open AERF spec + JSON Schema + Go verifier</td><td>open receipt spec and reference verifier Herkos lacks; in-process, no egress control</td></tr>
+        <tr><td><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2dd4bf" stroke-width="3" aria-hidden="true" style="vertical-align:-2px;margin-right:5px"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg><strong>Herkos</strong></td><td>context-derived (served span set)</td><td>mcp_proxy + Linux netns</td><td>ed25519 hash-chain, offline-verifiable, binds served context</td><td>the wedge; everything else below is more mature in its lane</td></tr>
+        <tr><td><strong>Pipelock</strong></td><td>network_mediator (content scan)</td><td>http/ws/mcp proxy + kernel sandbox</td><td>ed25519, 2 spec'd formats, 4 verifiers, conformance suite</td><td>strict superset on receipts, coverage, sandbox</td></tr>
+        <tr><td><strong>capgate</strong></td><td>scanner (compile-time)</td><td>emits bwrap/docker/nftables config</td><td>unsigned manifest hash</td><td>stronger per-host egress allowlist; no runtime, no signed audit</td></tr>
+        <tr><td><strong>mcp-spine</strong></td><td>in_runtime proxy</td><td>mcp_proxy</td><td>symmetric HMAC (not offline-verifiable)</td><td>more features; audit is not third-party verifiable; no egress control</td></tr>
+        <tr><td><strong>Invariant/Snyk mcp-scan</strong></td><td>scanner</td><td>pre-connect / mcp_proxy</td><td>runtime log</td><td>broader config/tool-definition risk scan</td></tr>
+        <tr><td><strong>srt (Claude Code sandbox)</strong></td><td>network_mediator</td><td>OS sandbox (Seatbelt/bubblewrap)</td><td>none</td><td>real cross-platform sandbox + domain allowlist; no audit, no broker</td></tr>
+        <tr><td><strong>Signet</strong></td><td>external_service (MCP proxy)</td><td>mcp_proxy</td><td>ed25519, bilateral co-signed receipts + audit chain</td><td>also signs every tools/call in-path; bilateral co-sign Herkos lacks; no egress or content gate, no context binding</td></tr>
+        <tr><td><strong>AgentMint</strong></td><td>in_runtime (decorator)</td><td>tool_adapter</td><td>ed25519, open AERF spec + JSON Schema + Go verifier</td><td>open receipt spec and reference verifier Herkos lacks; in-process, no egress control</td></tr>
       </tbody>
     </table>
 

@@ -128,12 +128,33 @@
     });
   }
 
+  // ---- heading anchors (deep links you can copy) ----
+  function initAnchors() {
+    var hs = document.querySelectorAll(".docs-main h1[id], .docs-main h2[id], .docs-main h3[id]");
+    hs.forEach(function (h) {
+      var a = document.createElement("a");
+      a.className = "heading-anchor";
+      a.href = "#" + h.id;
+      a.setAttribute("aria-label", "Copy link to this section");
+      a.textContent = "#";
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        history.replaceState(null, "", "#" + h.id);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(location.href);
+        }
+      });
+      h.appendChild(a);
+    });
+  }
+
   function init() {
     initReveal();
     initNav();
     initDocsSidebar();
     initCopy();
     initYear();
+    initAnchors();
   }
 
   if (document.readyState === "loading") {

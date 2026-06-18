@@ -892,3 +892,11 @@ section { position: relative; }
 .mt-0 { margin-top: 0; }
 .mb-0 { margin-bottom: 0; }
 .stack-lg > * + * { margin-top: 20px; }
+
+/* heading anchors: hover reveals a "#" you can click to copy a deep link */
+.docs-main h1, .docs-main h2, .docs-main h3 { position: relative; }
+.heading-anchor { margin-left: .4em; color: var(--fg-muted); opacity: 0; text-decoration: none; font-weight: 400; transition: opacity .15s ease; }
+.docs-main h1:hover .heading-anchor,
+.docs-main h2:hover .heading-anchor,
+.docs-main h3:hover .heading-anchor { opacity: .55; }
+.heading-anchor:hover { opacity: 1; color: #2dd4bf; }
